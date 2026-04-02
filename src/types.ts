@@ -1,6 +1,7 @@
 export interface ProfileMeta {
   name: string
   label?: string
+  browser?: string
   createdAt: string
 }
 

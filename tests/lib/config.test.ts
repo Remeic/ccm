@@ -75,6 +75,11 @@ describe('loadConfig', () => {
     writeFileSync(tmp.configFile, '[]')
     expect(loadConfig(tmp.configFile)).toEqual({ profiles: {} })
   })
+
+  test('returns default when parsed value is a number', () => {
+    writeFileSync(tmp.configFile, '42')
+    expect(loadConfig(tmp.configFile)).toEqual({ profiles: {} })
+  })
 })
 
 describe('saveConfig', () => {

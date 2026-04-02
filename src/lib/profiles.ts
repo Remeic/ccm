@@ -31,7 +31,7 @@ export function removeProfileDir(name: string, profilesDir = PROFILES_DIR): void
   if (!existsSync(dir)) {
     throw new Error(`Profile directory "${name}" does not exist`)
   }
-  rmSync(dir, { recursive: true, force: true })
+  rmSync(dir, { recursive: true })
 }
 
 export function getProfileDir(name: string, profilesDir = PROFILES_DIR): string {

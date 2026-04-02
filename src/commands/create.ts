@@ -1,4 +1,5 @@
 import type { Command } from 'commander'
+import { ensureBrowserWrapper } from '../lib/browsers.js'
 import { addProfile } from '../lib/config.js'
 import { createProfileDir, removeProfileDir } from '../lib/profiles.js'
 
@@ -7,13 +8,16 @@ export function registerCreate(program: Command): void {
     .command('create <name>')
     .description('Create a new profile')
     .option('-l, --label <label>', 'Profile label')
-    .action((name: string, opts: { label?: string }) => {
+    .option('-b, --browser <path>', 'Browser for OAuth login')
+    .action((name: string, opts: { label?: string; browser?: string }) => {
       try {
         createProfileDir(name)
+        const browser = opts.browser ? ensureBrowserWrapper(name, opts.browser) : undefined
         try {
           addProfile({
             name,
             label: opts.label,
+            browser,
             createdAt: new Date().toISOString(),
           })
         } catch (configErr) {

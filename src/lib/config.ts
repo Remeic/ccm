@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
 import type { CcmConfig, ProfileMeta } from '../types.js'
 import { CONFIG_FILE } from './constants.js'
@@ -10,6 +10,7 @@ export function loadConfig(configFile = CONFIG_FILE): CcmConfig {
     const raw = readFileSync(configFile, 'utf-8')
     const parsed: unknown = JSON.parse(raw)
     if (
+      // Stryker disable next-line ConditionalExpression: equivalent — non-object fails `in` operator with TypeError caught below
       typeof parsed !== 'object' ||
       parsed === null ||
       !('profiles' in parsed) ||
@@ -26,7 +27,7 @@ export function loadConfig(configFile = CONFIG_FILE): CcmConfig {
 
 export function saveConfig(config: CcmConfig, configFile = CONFIG_FILE): void {
   const dir = dirname(configFile)
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+  mkdirSync(dir, { recursive: true })
   const tmp = `${configFile}.tmp`
   writeFileSync(tmp, JSON.stringify(config, null, 2))
   renameSync(tmp, configFile)
