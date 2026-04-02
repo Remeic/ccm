@@ -1,5 +1,7 @@
 import type { Command } from 'commander'
+import { resolveBrowser } from '../lib/browsers.js'
 import { spawnClaude } from '../lib/claude.js'
+import { getProfile } from '../lib/config.js'
 import { getProfileDir, profileExists } from '../lib/profiles.js'
 
 export function registerLogin(program: Command): void {
@@ -7,7 +9,9 @@ export function registerLogin(program: Command): void {
     .command('login <name>')
     .description('Login to Claude Code with a profile')
     .option('--console', 'Use Anthropic Console (API key) auth')
-    .action((name: string, opts: { console?: boolean }) => {
+    .option('-b, --browser <path>', 'Browser to use for OAuth')
+    .option('--url-only', 'Print login URL without opening browser')
+    .action((name: string, opts: { console?: boolean; browser?: string; urlOnly?: boolean }) => {
       try {
         if (!profileExists(name)) {
           throw new Error(`Profile "${name}" does not exist. Create it first: ccm create ${name}`)
@@ -17,7 +21,16 @@ export function registerLogin(program: Command): void {
         if (opts.console) args.push('--console')
 
         const dir = getProfileDir(name)
-        const child = spawnClaude(dir, args)
+        const meta = getProfile(name)
+
+        let browser: string | undefined
+        if (opts.urlOnly) {
+          browser = 'true'
+        } else {
+          browser = resolveBrowser(opts.browser, meta)
+        }
+
+        const child = spawnClaude(dir, args, { browser })
         child.on('close', code => process.exit(code ?? 0))
       } catch (e) {
         console.error(`\x1b[31m✗\x1b[0m ${e instanceof Error ? e.message : String(e)}`)

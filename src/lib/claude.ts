@@ -6,19 +6,26 @@ export function findClaudeBinary(): string {
   const cmd = process.platform === 'win32' ? 'where' : 'which'
   try {
     const result = execFileSync(cmd, ['claude'], { encoding: 'utf-8' }).trim().split('\n')[0]
-    if (!result) throw new Error('Claude Code not found')
+    // Stryker disable next-line StringLiteral: message swallowed by catch — outer error is the observable one
+    if (!result) throw new Error('not found')
     return result
   } catch {
     throw new Error('Claude Code not found. Install: npm i -g @anthropic-ai/claude-code')
   }
 }
 
-export function spawnClaude(profileDir: string, args: string[]): ChildProcess {
+export function spawnClaude(
+  profileDir: string,
+  args: string[],
+  opts?: { browser?: string },
+): ChildProcess {
   const bin = findClaudeBinary()
-  return spawn(bin, args, {
-    env: { ...process.env, CLAUDE_CONFIG_DIR: profileDir },
-    stdio: 'inherit',
-  })
+  const env: Record<string, string | undefined> = {
+    ...process.env,
+    CLAUDE_CONFIG_DIR: profileDir,
+  }
+  if (opts?.browser) env.BROWSER = opts.browser
+  return spawn(bin, args, { env, stdio: 'inherit' })
 }
 
 export function getAuthStatus(profileDir: string): Promise<ClaudeAuthStatus> {
@@ -48,6 +55,7 @@ export function getAuthStatus(profileDir: string): Promise<ClaudeAuthStatus> {
       try {
         const parsed: unknown = JSON.parse(stdout)
         if (
+          // Stryker disable next-line ConditionalExpression: equivalent — non-object fails `in` operator with TypeError caught below
           typeof parsed === 'object' &&
           parsed !== null &&
           'loggedIn' in parsed &&

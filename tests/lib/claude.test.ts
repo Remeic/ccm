@@ -47,14 +47,22 @@ afterEach(() => {
 
 describe('findClaudeBinary', () => {
   test('returns path when claude binary is found in PATH', () => {
-    mockExecFileSync.mockReturnValue('/usr/local/bin/claude\n')
+    mockExecFileSync.mockReturnValue('  /usr/local/bin/claude  \n')
     expect(findClaudeBinary()).toBe('/usr/local/bin/claude')
+    expect(mockExecFileSync).toHaveBeenCalledWith('which', ['claude'], expect.anything())
   })
 
   test('throws when claude binary is not found', () => {
     mockExecFileSync.mockImplementation(() => {
       throw new Error('not found')
     })
+    expect(() => findClaudeBinary()).toThrow(
+      'Claude Code not found. Install: npm i -g @anthropic-ai/claude-code',
+    )
+  })
+
+  test('throws when execFileSync returns empty string', () => {
+    mockExecFileSync.mockReturnValue('  \n')
     expect(() => findClaudeBinary()).toThrow('Claude Code not found')
   })
 
@@ -158,6 +166,14 @@ describe('getAuthStatus', () => {
     mockSpawn.mockReturnValue(fakeChild)
 
     const promise = getAuthStatus('/tmp/profile')
+
+    expect(mockSpawn).toHaveBeenCalledWith(
+      '/bin/claude',
+      ['auth', 'status', '--json'],
+      expect.objectContaining({
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }),
+    )
 
     fakeChild.stdout.push(
       JSON.stringify({ loggedIn: true, authMethod: 'claude.ai', email: 'user@test.com' }),
@@ -273,13 +289,14 @@ describe('getAuthStatus', () => {
 
     const promise = getAuthStatus('/dir')
 
-    fakeChild.stdout.push(JSON.stringify({ loggedIn: 'not-boolean', authMethod: 123 }))
+    fakeChild.stdout.push(JSON.stringify({ loggedIn: 'not-boolean', authMethod: 'api_key' }))
     fakeChild.stdout.push(null)
     await new Promise(r => setTimeout(r, 10))
     fakeChild.emit('close', 0)
 
     const result = await promise
-    expect(result).toEqual({ loggedIn: false, authMethod: 'unknown' })
+    expect(result.loggedIn).toBe(false)
+    expect(result.authMethod).toBe('unknown')
   })
 
   test('resolves with fallback when JSON is missing required fields', async () => {
@@ -290,6 +307,38 @@ describe('getAuthStatus', () => {
     const promise = getAuthStatus('/dir')
 
     fakeChild.stdout.push(JSON.stringify({ other: 'data' }))
+    fakeChild.stdout.push(null)
+    await new Promise(r => setTimeout(r, 10))
+    fakeChild.emit('close', 0)
+
+    const result = await promise
+    expect(result).toEqual({ loggedIn: false, authMethod: 'unknown' })
+  })
+
+  test('resolves with fallback when loggedIn is boolean but authMethod is not string', async () => {
+    mockExecFileSync.mockReturnValue('/bin/claude\n')
+    const fakeChild = createFakeChild()
+    mockSpawn.mockReturnValue(fakeChild)
+
+    const promise = getAuthStatus('/dir')
+
+    fakeChild.stdout.push(JSON.stringify({ loggedIn: true, authMethod: 42 }))
+    fakeChild.stdout.push(null)
+    await new Promise(r => setTimeout(r, 10))
+    fakeChild.emit('close', 0)
+
+    const result = await promise
+    expect(result).toEqual({ loggedIn: false, authMethod: 'unknown' })
+  })
+
+  test('resolves with fallback when parsed is a primitive string', async () => {
+    mockExecFileSync.mockReturnValue('/bin/claude\n')
+    const fakeChild = createFakeChild()
+    mockSpawn.mockReturnValue(fakeChild)
+
+    const promise = getAuthStatus('/dir')
+
+    fakeChild.stdout.push('"just a string"')
     fakeChild.stdout.push(null)
     await new Promise(r => setTimeout(r, 10))
     fakeChild.emit('close', 0)
