@@ -1,0 +1,125 @@
+import { Command } from 'commander'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { registerCreate } from '../../src/commands/create.js'
+
+vi.mock('../../src/lib/config.js', () => ({
+  addProfile: vi.fn(),
+}))
+vi.mock('../../src/lib/profiles.js', () => ({
+  createProfileDir: vi.fn(),
+  removeProfileDir: vi.fn(),
+}))
+
+import { addProfile } from '../../src/lib/config.js'
+import { createProfileDir, removeProfileDir } from '../../src/lib/profiles.js'
+
+const mockAddProfile = vi.mocked(addProfile)
+const mockCreateProfileDir = vi.mocked(createProfileDir)
+const mockRemoveProfileDir = vi.mocked(removeProfileDir)
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  vi.spyOn(console, 'log').mockImplementation(() => {})
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+  vi.spyOn(process, 'exit').mockImplementation(code => {
+    throw new Error(`exit:${code}`)
+  })
+})
+
+function createProgram() {
+  const program = new Command()
+  program.exitOverride()
+  registerCreate(program)
+  return program
+}
+
+describe('command: create', () => {
+  describe('profile creation', () => {
+    test('creates profile directory and adds to config', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/profiles/work')
+      const program = createProgram()
+      program.parse(['node', 'ccm', 'create', 'work'])
+
+      expect(mockCreateProfileDir).toHaveBeenCalledWith('work')
+      expect(mockAddProfile).toHaveBeenCalledWith(expect.objectContaining({ name: 'work' }))
+    })
+
+    test('passes label option to addProfile', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/profiles/myprof')
+      const program = createProgram()
+      program.parse(['node', 'ccm', 'create', 'myprof', '--label', 'My Profile'])
+
+      expect(mockAddProfile).toHaveBeenCalledWith(expect.objectContaining({ label: 'My Profile' }))
+    })
+
+    test('fails if profile already exists', () => {
+      mockCreateProfileDir.mockImplementation(() => {
+        throw new Error('already exists')
+      })
+      const program = createProgram()
+      expect(() => program.parse(['node', 'ccm', 'create', 'dup'])).toThrow('exit:1')
+    })
+
+    test('prints success message with profile name', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/x')
+      const log = vi.spyOn(console, 'log')
+      const program = createProgram()
+      program.parse(['node', 'ccm', 'create', 'test'])
+
+      expect(log).toHaveBeenCalledWith(expect.stringContaining('test'))
+    })
+
+    test('prints error message on failure', () => {
+      mockCreateProfileDir.mockImplementation(() => {
+        throw new Error('oops')
+      })
+      const errLog = vi.spyOn(console, 'error')
+      const program = createProgram()
+      expect(() => program.parse(['node', 'ccm', 'create', 'fail'])).toThrow('exit:1')
+      expect(errLog).toHaveBeenCalledWith(expect.stringContaining('oops'))
+    })
+
+    test('sets createdAt as ISO string', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/x')
+      const program = createProgram()
+      program.parse(['node', 'ccm', 'create', 'dated'])
+
+      const meta = mockAddProfile.mock.calls[0]?.[0]
+      expect(() => new Date(meta.createdAt).toISOString()).not.toThrow()
+    })
+
+    test('rolls back profile dir when addProfile fails', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/profiles/bad')
+      mockAddProfile.mockImplementation(() => {
+        throw new Error('config write failed')
+      })
+      const program = createProgram()
+      expect(() => program.parse(['node', 'ccm', 'create', 'bad'])).toThrow('exit:1')
+      expect(mockRemoveProfileDir).toHaveBeenCalledWith('bad')
+    })
+
+    test('handles rollback failure silently when addProfile fails', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/profiles/bad')
+      mockAddProfile.mockImplementation(() => {
+        throw new Error('config write failed')
+      })
+      mockRemoveProfileDir.mockImplementation(() => {
+        throw new Error('cleanup failed')
+      })
+      const errLog = vi.spyOn(console, 'error')
+      const program = createProgram()
+      expect(() => program.parse(['node', 'ccm', 'create', 'bad'])).toThrow('exit:1')
+      expect(errLog).toHaveBeenCalledWith(expect.stringContaining('config write failed'))
+    })
+
+    test('handles non-Error throw in catch block', () => {
+      mockCreateProfileDir.mockImplementation(() => {
+        throw 'string error'
+      })
+      const errLog = vi.spyOn(console, 'error')
+      const program = createProgram()
+      expect(() => program.parse(['node', 'ccm', 'create', 'bad'])).toThrow('exit:1')
+      expect(errLog).toHaveBeenCalledWith(expect.stringContaining('string error'))
+    })
+  })
+})
