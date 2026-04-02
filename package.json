@@ -1,0 +1,41 @@
+{
+  "name": "ccm-cli",
+  "version": "0.1.0",
+  "description": "nvm-like manager for Claude Code profiles",
+  "type": "module",
+  "bin": {
+    "ccm": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "biome check src tests",
+    "format": "biome format --write src tests",
+    "lint:fix": "biome check --write src tests",
+    "prepublishOnly": "bun run build",
+    "prepare": "husky"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "commander": "^13.1.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.10",
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "@vitest/coverage-v8": "^3.1.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.1"
+  }
+}
