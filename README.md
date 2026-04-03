@@ -1,6 +1,12 @@
+<img src="./docs/assets/ccm-logo.png" alt="ccm logo" width="140" align="left" />
+
 # ccm
 
-> Multi-profile manager for Claude Code
+**Multi-profile manager for Claude Code**
+
+Switch between Claude Code accounts instantly. Like <code>nvm</code> for Claude Code profiles.
+
+<br clear="left" />
 
 [![CI](https://github.com/remeic/ccm/actions/workflows/ci.yml/badge.svg)](https://github.com/remeic/ccm/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/%40remeic%2Fccm.svg)](https://www.npmjs.com/package/@remeic/ccm)
@@ -9,11 +15,7 @@
 [![codecov](https://codecov.io/github/Remeic/ccm/graph/badge.svg?token=E16LCLDHYV)](https://codecov.io/github/Remeic/ccm)
 [![mutation testing](https://img.shields.io/badge/mutation%20testing-100%25-brightgreen)](https://stryker-mutator.io/)
 
-<p align="center">
-  <img src="./docs/assets/ccm-logo.png" alt="ccm logo" width="180" />
-</p>
-
-## Switch between Claude Code accounts instantly. Like `nvm` for Claude Code profiles.
+Manage separate Claude Code profiles for personal, work, and client accounts without repeated logout/login cycles. `ccm` keeps each profile isolated so switching is immediate and parallel sessions stay clean.
 
 <p align="center">
   <img src="./docs/assets/intro.gif" alt="ccm in action in a terminal view" />
@@ -22,7 +24,6 @@
 ## Table of Contents
 
 - [ccm](#ccm)
-  - [Switch between Claude Code accounts instantly. Like `nvm` for Claude Code profiles.](#switch-between-claude-code-accounts-instantly-like-nvm-for-claude-code-profiles)
   - [Table of Contents](#table-of-contents)
   - [Why](#why)
   - [Prerequisites](#prerequisites)
@@ -48,6 +49,7 @@
   - [Comparison](#comparison)
   - [FAQ](#faq)
   - [Contributing](#contributing)
+    - [Homebrew Releases](#homebrew-releases)
   - [License](#license)
 
 ## Why
