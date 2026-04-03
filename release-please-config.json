@@ -3,7 +3,7 @@
   "packages": {
     ".": {
       "release-type": "node",
-      "package-name": "ccm-cli",
+      "package-name": "@remeic/ccm",
       "changelog-path": "CHANGELOG.md",
       "include-v-in-tag": true
     }
