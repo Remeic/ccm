@@ -9,6 +9,10 @@
 [![codecov](https://codecov.io/github/Remeic/ccm-cli/graph/badge.svg?token=E16LCLDHYV)](https://codecov.io/github/Remeic/ccm-cli)
 [![mutation testing](https://img.shields.io/badge/mutation%20testing-100%25-brightgreen)](https://stryker-mutator.io/)
 
+<p align="center">
+  <img src="./docs/assets/ccm-logo.png" alt="ccm logo" width="88" />
+</p>
+
 Switch between Claude Code accounts instantly. Like `nvm` for Claude Code profiles.
 
 ## Table of Contents
