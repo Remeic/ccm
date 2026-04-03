@@ -78,8 +78,8 @@ describe('profile-store error paths', () => {
       throw new Error('config fail')
     })
 
-    expect(() => removeStoredProfile('work', '/cfg.json', '/profiles', '/browsers')).toThrow(
-      'config fail',
+    expect(() => removeStoredProfile('work', '/cfg.json', '/profiles', '/browsers')).toThrowError(
+      new Error('config fail'),
     )
     expect(mockRestoreStagedProfileDir).toHaveBeenCalledWith(
       '/profiles/.work.staged',
@@ -119,12 +119,13 @@ describe('profile-store error paths', () => {
       .mockReturnValueOnce({ name: 'work', createdAt: '2026-01-01' })
     mockProfileExists.mockReturnValue(true)
     mockStageProfileDirRemoval.mockReturnValue('/profiles/.work.staged')
+    mockStageBrowserWrapperRemoval.mockReturnValue('/browsers/work.sh.staged')
     mockFinalizeStagedProfileDirRemoval.mockImplementation(() => {
       throw new Error('finalize fail')
     })
 
-    expect(() => removeStoredProfile('work', '/cfg.json', '/profiles', '/browsers')).toThrow(
-      'finalize fail',
+    expect(() => removeStoredProfile('work', '/cfg.json', '/profiles', '/browsers')).toThrowError(
+      new Error('finalize fail'),
     )
     expect(mockRestoreStagedProfileDir).toHaveBeenCalledWith(
       '/profiles/.work.staged',
@@ -167,5 +168,15 @@ describe('profile-store error paths', () => {
       expect.objectContaining({ name: 'configOnly', state: 'config-only' }),
       expect.objectContaining({ name: 'orphaned', state: 'orphaned' }),
     ])
+  })
+
+  test('finalizes a staged browser wrapper for config-only profiles', () => {
+    mockGetProfile.mockReturnValue({ name: 'work', createdAt: '2026-01-01' })
+    mockProfileExists.mockReturnValue(false)
+    mockStageBrowserWrapperRemoval.mockReturnValue('/browsers/work.sh.staged')
+
+    removeStoredProfile('work', '/cfg.json', '/profiles', '/browsers')
+
+    expect(mockFinalizeStagedBrowserWrapperRemoval).toHaveBeenCalledWith('/browsers/work.sh.staged')
   })
 })
