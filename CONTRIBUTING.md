@@ -3,8 +3,8 @@
 ## Setup
 
 ```sh
-git clone https://github.com/remeic/ccm-cli.git
-cd ccm-cli
+git clone https://github.com/remeic/ccm.git
+cd ccm
 bun install
 ```
 

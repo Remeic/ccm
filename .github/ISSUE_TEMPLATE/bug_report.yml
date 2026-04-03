@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a bug in ccm-cli
+description: Report a bug in ccm
 labels: ["bug"]
 body:
   - type: textarea
