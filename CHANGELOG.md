@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/Remeic/ccm/compare/ccm-v0.2.0...ccm-v0.2.1) (2026-04-03)
+
+
+### Bug Fixes
+
+* **ci:** publish to npm via trusted publishing ([#19](https://github.com/Remeic/ccm/issues/19)) ([e6d6898](https://github.com/Remeic/ccm/commit/e6d6898772ff718a83508f62cae9bb486278a101))
+
 ## [0.2.0](https://github.com/Remeic/ccm/compare/ccm-v0.1.0...ccm-v0.2.0) (2026-04-03)
 
 
