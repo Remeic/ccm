@@ -10,15 +10,12 @@ export function registerLogin(program: Command): void {
     .description('Login to Claude Code with a profile')
     .option('--console', 'Use Anthropic Console (API key) auth')
     .option('-b, --browser <path>', 'Browser to use for OAuth')
-    .option('--url-only', 'Print login URL without opening browser')
+    .option('--url-only', 'Print login URL without opening browser (supports code paste)')
     .action((name: string, opts: { console?: boolean; browser?: string; urlOnly?: boolean }) => {
       try {
         if (!profileExists(name)) {
           throw new Error(`Profile "${name}" does not exist. Create it first: ccm create ${name}`)
         }
-
-        const args = ['auth', 'login']
-        if (opts.console) args.push('--console')
 
         const dir = getProfileDir(name)
         const meta = getProfile(name)
@@ -30,8 +27,16 @@ export function registerLogin(program: Command): void {
           browser = resolveBrowser(opts.browser, meta)
         }
 
-        const child = spawnClaude(dir, args, { browser })
-        child.on('close', code => process.exit(code ?? 0))
+        if (opts.console) {
+          // API key auth: use `claude auth login --console`
+          const child = spawnClaude(dir, ['auth', 'login', '--console'], { browser })
+          child.on('close', code => process.exit(code ?? 0))
+        } else {
+          // OAuth: spawn `claude` directly (no subcommand)
+          // This triggers the interactive TUI with "Paste code here" support
+          const child = spawnClaude(dir, [], { browser })
+          child.on('close', code => process.exit(code ?? 0))
+        }
       } catch (e) {
         console.error(`\x1b[31m✗\x1b[0m ${e instanceof Error ? e.message : String(e)}`)
         process.exit(1)
