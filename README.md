@@ -6,6 +6,7 @@
 [![npm version](https://img.shields.io/npm/v/ccm-cli.svg)](https://www.npmjs.com/package/ccm-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
+[![codecov](https://codecov.io/github/Remeic/ccm-cli/graph/badge.svg?token=E16LCLDHYV)](https://codecov.io/github/Remeic/ccm-cli)
 
 Switch between Claude Code accounts instantly. Like `nvm` for Claude Code profiles.
 
