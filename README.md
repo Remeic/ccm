@@ -1,56 +1,53 @@
-<img src="./docs/assets/ccm-logo.png" alt="ccm logo" width="140" align="left" />
+<img src="./docs/assets/ccm-logo.png" alt="ccm logo" width="124" align="left" hspace="18" />
 
-# ccm
-
-**Multi-profile manager for Claude Code**
-
+<br />
+<strong>ccm</strong><br />
+<strong>Multi-profile manager for Claude Code</strong><br />
 Switch between Claude Code accounts instantly. Like <code>nvm</code> for Claude Code profiles.
 
 <br clear="left" />
 
-[![CI](https://github.com/remeic/ccm-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/remeic/ccm-cli/actions/workflows/ci.yml)
+[![CI](https://github.com/remeic/ccm/actions/workflows/ci.yml/badge.svg)](https://github.com/remeic/ccm/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/%40remeic%2Fccm.svg)](https://www.npmjs.com/package/@remeic/ccm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
-[![codecov](https://codecov.io/github/Remeic/ccm-cli/graph/badge.svg?token=E16LCLDHYV)](https://codecov.io/github/Remeic/ccm-cli)
+[![codecov](https://codecov.io/github/Remeic/ccm/graph/badge.svg?token=E16LCLDHYV)](https://codecov.io/github/Remeic/ccm)
 [![mutation testing](https://img.shields.io/badge/mutation%20testing-100%25-brightgreen)](https://stryker-mutator.io/)
 
 Manage separate Claude Code profiles for personal, work, and client accounts without repeated logout/login cycles. `ccm` keeps each profile isolated so switching is immediate and parallel sessions stay clean.
 
 <p align="center">
-  <img src="./docs/assets/intro.gif" alt="ccm in action in a terminal view" />
+  <img src="./docs/assets/intro.gif" alt="ccm in action in a terminal view" width="100%" />
 </p>
 
 ## Table of Contents
 
-- [ccm](#ccm)
-  - [Table of Contents](#table-of-contents)
-  - [Why](#why)
-  - [Prerequisites](#prerequisites)
-  - [Install](#install)
-  - [Quick Start](#quick-start)
-  - [Commands](#commands)
-  - [Passing Flags and Environment Variables](#passing-flags-and-environment-variables)
-  - [Multi-Account Login](#multi-account-login)
-    - [Different Browser per Profile](#different-browser-per-profile)
-    - [URL-Only Mode](#url-only-mode)
-    - [API Key Auth](#api-key-auth)
-  - [How It Works](#how-it-works)
-    - [Architecture Overview](#architecture-overview)
-    - [Profile Isolation](#profile-isolation)
-    - [Profile Lifecycle](#profile-lifecycle)
-    - [Launching Claude](#launching-claude)
-    - [Authentication](#authentication)
-    - [Removing Profiles](#removing-profiles)
-    - [Config Persistence](#config-persistence)
-    - [Claude Binary Discovery](#claude-binary-discovery)
-  - [Configuration](#configuration)
-  - [Privacy](#privacy)
-  - [Comparison](#comparison)
-  - [FAQ](#faq)
-  - [Contributing](#contributing)
-    - [Homebrew Releases](#homebrew-releases)
-  - [License](#license)
+- [Table of Contents](#table-of-contents)
+- [Why](#why)
+- [Prerequisites](#prerequisites)
+- [Install](#install)
+- [Quick Start](#quick-start)
+- [Commands](#commands)
+- [Passing Flags and Environment Variables](#passing-flags-and-environment-variables)
+- [Multi-Account Login](#multi-account-login)
+  - [Different Browser per Profile](#different-browser-per-profile)
+  - [URL-Only Mode](#url-only-mode)
+  - [API Key Auth](#api-key-auth)
+- [How It Works](#how-it-works)
+  - [Architecture Overview](#architecture-overview)
+  - [Profile Isolation](#profile-isolation)
+  - [Profile Lifecycle](#profile-lifecycle)
+  - [Launching Claude](#launching-claude)
+  - [Authentication](#authentication)
+  - [Removing Profiles](#removing-profiles)
+  - [Config Persistence](#config-persistence)
+  - [Claude Binary Discovery](#claude-binary-discovery)
+- [Configuration](#configuration)
+- [Privacy](#privacy)
+- [Comparison](#comparison)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Why
 
