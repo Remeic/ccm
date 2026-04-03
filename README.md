@@ -31,6 +31,7 @@ Switch between Claude Code accounts instantly. Like `nvm` for Claude Code profil
 - [Privacy](#privacy)
 - [Comparison](#comparison)
 - [FAQ](#faq)
+- [Releasing](#releasing)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -373,6 +374,43 @@ All profiles and their auth tokens are lost. Claude Code itself is unaffected.
 **Is Windows supported?**
 
 ccm uses cross-platform binary discovery (`which`/`where`) and standard Node.js filesystem APIs. It works on macOS, Linux, and Windows.
+
+## Releasing
+
+Releases are managed automatically with Release Please and Conventional Commits.
+
+Every push to `main` updates or creates a Release PR that:
+
+- bumps the version in `package.json`
+- updates `CHANGELOG.md`
+- prepares the next GitHub Release
+
+When that Release PR is merged, the release workflow will:
+
+- install dependencies, lint, build, and run tests
+- publish the package to npm
+- create the GitHub tag and Release
+
+Before using it, configure one of these npm publishing options:
+
+- preferred: add this repository as a trusted publisher for `.github/workflows/release.yml`
+- fallback: add a repository secret named `NPM_TOKEN` with publish permissions
+- optional: add `RELEASE_PLEASE_TOKEN` as a GitHub PAT if you want CI to run on Release PRs created by the automation
+
+Commit messages should follow Conventional Commits because versioning is derived from them:
+
+- `fix:` -> patch
+- `feat:` -> minor
+- `feat!:` or any commit with `BREAKING CHANGE:` -> major
+
+Typical flow:
+
+```sh
+git commit -m "feat: add profile export command"
+git push origin my-branch
+```
+
+After the PR is merged into `main`, Release Please opens or updates the release PR automatically. Merging that PR publishes the new version.
 
 ## Contributing
 
