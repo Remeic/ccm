@@ -10,12 +10,22 @@ vi.mock('../../src/lib/profiles.js', () => ({
   profileExists: vi.fn(),
   getProfileDir: vi.fn((name: string) => `/tmp/profiles/${name}`),
 }))
+vi.mock('../../src/lib/browsers.js', () => ({
+  resolveBrowser: vi.fn(),
+}))
+vi.mock('../../src/lib/config.js', () => ({
+  getProfile: vi.fn(),
+}))
 
+import { resolveBrowser } from '../../src/lib/browsers.js'
 import { spawnClaude } from '../../src/lib/claude.js'
+import { getProfile } from '../../src/lib/config.js'
 import { profileExists } from '../../src/lib/profiles.js'
 
 const mockSpawnClaude = vi.mocked(spawnClaude)
 const mockProfileExists = vi.mocked(profileExists)
+const mockResolveBrowser = vi.mocked(resolveBrowser)
+const mockGetProfile = vi.mocked(getProfile)
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -33,7 +43,7 @@ function createProgram() {
 }
 
 describe('command: login', () => {
-  test('spawns claude login with correct profile config dir', () => {
+  test('spawns claude directly (TUI) for OAuth login', () => {
     mockProfileExists.mockReturnValue(true)
     const fakeChild = new EventEmitter()
     mockSpawnClaude.mockReturnValue(fakeChild as any)
@@ -41,10 +51,14 @@ describe('command: login', () => {
     const program = createProgram()
     program.parse(['node', 'ccm', 'login', 'work'])
 
-    expect(mockSpawnClaude).toHaveBeenCalledWith('/tmp/profiles/work', ['auth', 'login'])
+    expect(mockSpawnClaude).toHaveBeenCalledWith(
+      '/tmp/profiles/work',
+      [],
+      expect.objectContaining({ browser: undefined }),
+    )
   })
 
-  test('passes --console flag to claude', () => {
+  test('uses claude auth login --console for API key auth', () => {
     mockProfileExists.mockReturnValue(true)
     const fakeChild = new EventEmitter()
     mockSpawnClaude.mockReturnValue(fakeChild as any)
@@ -52,11 +66,11 @@ describe('command: login', () => {
     const program = createProgram()
     program.parse(['node', 'ccm', 'login', 'work', '--console'])
 
-    expect(mockSpawnClaude).toHaveBeenCalledWith('/tmp/profiles/work', [
-      'auth',
-      'login',
-      '--console',
-    ])
+    expect(mockSpawnClaude).toHaveBeenCalledWith(
+      '/tmp/profiles/work',
+      ['auth', 'login', '--console'],
+      expect.objectContaining({}),
+    )
   })
 
   test('fails if profile does not exist', () => {
@@ -65,7 +79,7 @@ describe('command: login', () => {
     expect(() => program.parse(['node', 'ccm', 'login', 'ghost'])).toThrow('exit:1')
   })
 
-  test('passes through claude login exit code', () => {
+  test('passes through claude exit code', () => {
     mockProfileExists.mockReturnValue(true)
     const fakeChild = new EventEmitter()
     mockSpawnClaude.mockReturnValue(fakeChild as any)
@@ -107,5 +121,80 @@ describe('command: login', () => {
     const program = createProgram()
     expect(() => program.parse(['node', 'ccm', 'login', 'work'])).toThrow('exit:1')
     expect(errLog).toHaveBeenCalledWith(expect.stringContaining('string error'))
+  })
+
+  test('passes --browser to resolveBrowser', () => {
+    mockProfileExists.mockReturnValue(true)
+    mockGetProfile.mockReturnValue({ name: 'work', createdAt: '' })
+    mockResolveBrowser.mockReturnValue('/usr/bin/firefox')
+    const fakeChild = new EventEmitter()
+    mockSpawnClaude.mockReturnValue(fakeChild as any)
+
+    const program = createProgram()
+    program.parse(['node', 'ccm', 'login', 'work', '--browser', '/usr/bin/firefox'])
+
+    expect(mockResolveBrowser).toHaveBeenCalledWith('/usr/bin/firefox', expect.anything())
+    expect(mockSpawnClaude).toHaveBeenCalledWith('/tmp/profiles/work', [], {
+      browser: '/usr/bin/firefox',
+    })
+  })
+
+  test('resolves browser from profile metadata when no CLI override', () => {
+    mockProfileExists.mockReturnValue(true)
+    const meta = { name: 'work', browser: '/saved/chrome', createdAt: '' }
+    mockGetProfile.mockReturnValue(meta)
+    mockResolveBrowser.mockReturnValue('/saved/chrome')
+    const fakeChild = new EventEmitter()
+    mockSpawnClaude.mockReturnValue(fakeChild as any)
+
+    const program = createProgram()
+    program.parse(['node', 'ccm', 'login', 'work'])
+
+    expect(mockResolveBrowser).toHaveBeenCalledWith(undefined, meta)
+    expect(mockSpawnClaude).toHaveBeenCalledWith('/tmp/profiles/work', [], {
+      browser: '/saved/chrome',
+    })
+  })
+
+  test('--url-only sets browser to "true" to suppress opening', () => {
+    mockProfileExists.mockReturnValue(true)
+    mockGetProfile.mockReturnValue({ name: 'work', createdAt: '' })
+    const fakeChild = new EventEmitter()
+    mockSpawnClaude.mockReturnValue(fakeChild as any)
+
+    const program = createProgram()
+    program.parse(['node', 'ccm', 'login', 'work', '--url-only'])
+
+    expect(mockResolveBrowser).not.toHaveBeenCalled()
+    expect(mockSpawnClaude).toHaveBeenCalledWith('/tmp/profiles/work', [], { browser: 'true' })
+  })
+
+  test('--url-only takes precedence over --browser', () => {
+    mockProfileExists.mockReturnValue(true)
+    mockGetProfile.mockReturnValue({ name: 'work', createdAt: '' })
+    const fakeChild = new EventEmitter()
+    mockSpawnClaude.mockReturnValue(fakeChild as any)
+
+    const program = createProgram()
+    program.parse(['node', 'ccm', 'login', 'work', '--url-only', '--browser', '/usr/bin/firefox'])
+
+    expect(mockResolveBrowser).not.toHaveBeenCalled()
+    expect(mockSpawnClaude).toHaveBeenCalledWith('/tmp/profiles/work', [], { browser: 'true' })
+  })
+
+  test('--console with --url-only still uses auth login subcommand', () => {
+    mockProfileExists.mockReturnValue(true)
+    mockGetProfile.mockReturnValue({ name: 'work', createdAt: '' })
+    const fakeChild = new EventEmitter()
+    mockSpawnClaude.mockReturnValue(fakeChild as any)
+
+    const program = createProgram()
+    program.parse(['node', 'ccm', 'login', 'work', '--console', '--url-only'])
+
+    expect(mockSpawnClaude).toHaveBeenCalledWith(
+      '/tmp/profiles/work',
+      ['auth', 'login', '--console'],
+      { browser: 'true' },
+    )
   })
 })
