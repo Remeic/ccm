@@ -15,6 +15,7 @@
 
 [![CI](https://github.com/remeic/ccm/actions/workflows/ci.yml/badge.svg)](https://github.com/remeic/ccm/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/%40remeic%2Fccm.svg)](https://www.npmjs.com/package/@remeic/ccm)
+[![Homebrew tap](https://img.shields.io/badge/Homebrew-tap-FBB040?logo=homebrew&logoColor=white)](https://github.com/Remeic/homebrew-tap)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![codecov](https://codecov.io/github/Remeic/ccm/graph/badge.svg?token=E16LCLDHYV)](https://codecov.io/github/Remeic/ccm)
@@ -66,11 +67,25 @@ Claude Code stores authentication in a single config directory. If you use multi
 
 ## Install
 
+### Package Managers
+
 ```sh
-npm i -g @remeic/ccm
+npm install -g @remeic/ccm
 ```
 
-Or with Homebrew:
+```sh
+pnpm add -g @remeic/ccm
+```
+
+```sh
+yarn global add @remeic/ccm
+```
+
+```sh
+bun add -g @remeic/ccm
+```
+
+### Homebrew
 
 ```sh
 brew install remeic/tap/ccm
@@ -78,10 +93,22 @@ brew install remeic/tap/ccm
 
 Homebrew core already ships an unrelated `ccm` formula, so install this one with the fully qualified tap name.
 
-Or run without installing:
+### Without Installing
 
 ```sh
 npx @remeic/ccm <command>
+```
+
+```sh
+pnpm dlx @remeic/ccm <command>
+```
+
+```sh
+yarn dlx @remeic/ccm <command>
+```
+
+```sh
+bunx @remeic/ccm <command>
 ```
 
 The installed command remains `ccm`.
