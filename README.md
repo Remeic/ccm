@@ -1,11 +1,17 @@
-<img src="./docs/assets/ccm-logo.png" alt="ccm logo" width="124" align="left" hspace="18" />
-
-<br />
-<strong>ccm</strong><br />
-<strong>Multi-profile manager for Claude Code</strong><br />
-Switch between Claude Code accounts instantly. Like <code>nvm</code> for Claude Code profiles.
-
-<br clear="left" />
+<div id="toc">
+  <table>
+    <tr>
+      <td width="170" valign="top">
+        <img src="./docs/assets/ccm-logo.png" alt="CCM Logo" width="150" height="150" />
+      </td>
+      <td valign="middle">
+        <h1 align="left">ccm</h1>
+        <p><strong>Multi-profile manager for Claude Code</strong></p>
+        <p>Switch between Claude Code accounts instantly. Like <code>nvm</code> for Claude Code profiles.</p>
+      </td>
+    </tr>
+  </table>
+</div>
 
 [![CI](https://github.com/remeic/ccm/actions/workflows/ci.yml/badge.svg)](https://github.com/remeic/ccm/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/%40remeic%2Fccm.svg)](https://www.npmjs.com/package/@remeic/ccm)
@@ -404,6 +410,8 @@ ccm uses cross-platform binary discovery (`which`/`where`) and standard Node.js 
 ### Homebrew Releases
 
 Homebrew publication is handled through a dedicated tap, not `homebrew/core`. After `npm publish`, the release workflow updates `Formula/ccm.rb` in the tap repository.
+
+To keep the release PR and changelog accurate, prefer **Squash and merge** with a Conventional Commit PR title like `feat: add profile import command`. `release-please` uses the merged commit on `main`, so `docs:` and `refactor:` changes are typically omitted from Node release notes while `feat:` and `fix:` become releasable entries.
 
 Required repository configuration:
 

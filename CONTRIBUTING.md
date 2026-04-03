@@ -52,4 +52,14 @@ bun run test:mutation  # run mutation tests
 1. Fork and create a feature branch
 2. Write tests for new functionality
 3. Ensure `bun run test:coverage` passes
-4. Open a PR against `main`
+4. Open a PR against `main` with a Conventional Commit title such as `feat: add profile import command`
+5. Use **Squash and merge** when merging the PR
+
+## Release Notes Hygiene
+
+`release-please` builds the release PR and changelog from Conventional Commit messages on `main`.
+
+- Keep the PR title in Conventional Commit format so the squash commit is releasable and readable
+- Prefer **Squash and merge** to keep a linear history and avoid noisy or duplicated changelog entries
+- Use `feat:` and `fix:` for user-facing changes that should appear in release notes
+- Expect `docs:`, `refactor:`, `chore:` and similar maintenance-only changes to be omitted from Node release notes unless the release configuration is changed
