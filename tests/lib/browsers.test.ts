@@ -40,9 +40,13 @@ describe('ensureBrowserWrapper', () => {
 
   test('script is executable', () => {
     ensureBrowserWrapper('dev', 'open -a Chrome', browsersDir)
-    const mode = statSync(join(browsersDir, 'dev.sh')).mode
-    // 0o755 = owner rwx, group rx, others rx
-    expect(mode & 0o755).toBe(0o755)
+    if (process.platform === 'win32') {
+      expect(existsSync(join(browsersDir, 'dev.sh'))).toBe(true)
+    } else {
+      const mode = statSync(join(browsersDir, 'dev.sh')).mode
+      // 0o755 = owner rwx, group rx, others rx
+      expect(mode & 0o755).toBe(0o755)
+    }
   })
 
   test('creates browsers directory if missing', () => {

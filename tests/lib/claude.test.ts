@@ -49,7 +49,8 @@ describe('findClaudeBinary', () => {
   test('returns path when claude binary is found in PATH', () => {
     mockExecFileSync.mockReturnValue('  /usr/local/bin/claude  \n')
     expect(findClaudeBinary()).toBe('/usr/local/bin/claude')
-    expect(mockExecFileSync).toHaveBeenCalledWith('which', ['claude'], expect.anything())
+    const expectedCmd = process.platform === 'win32' ? 'where' : 'which'
+    expect(mockExecFileSync).toHaveBeenCalledWith(expectedCmd, ['claude'], expect.anything())
   })
 
   test('throws when claude binary is not found', () => {
