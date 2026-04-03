@@ -1,7 +1,11 @@
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
-import { ensureBrowserWrapper, resolveBrowser } from '../../src/lib/browsers.js'
+import {
+  ensureBrowserWrapper,
+  resolveBrowser,
+  validateBrowserCommand,
+} from '../../src/lib/browsers.js'
 import { cleanupTempDir, createTempCcmHome, type TempCcmHome } from '../helpers.js'
 
 let tmp: TempCcmHome
@@ -53,6 +57,44 @@ describe('ensureBrowserWrapper', () => {
     const content = readFileSync(join(browsersDir, 'work.sh'), 'utf-8')
     expect(content).toContain('cmd --new')
     expect(content).not.toContain('cmd --old')
+  })
+
+  test('rejects unsafe command before creating wrapper', () => {
+    expect(() => ensureBrowserWrapper('work', 'firefox; rm -rf /', browsersDir)).toThrow(
+      /Unsafe browser command/,
+    )
+    expect(existsSync(browsersDir)).toBe(false)
+  })
+})
+
+describe('validateBrowserCommand', () => {
+  test('accepts simple command', () => {
+    expect(() => validateBrowserCommand('firefox')).not.toThrow()
+  })
+
+  test('accepts command with spaces', () => {
+    expect(() => validateBrowserCommand('open -a "Google Chrome"')).not.toThrow()
+  })
+
+  test('accepts path-based command', () => {
+    expect(() => validateBrowserCommand('/usr/bin/firefox --profile x')).not.toThrow()
+  })
+
+  test.each([
+    ['semicolon', 'firefox; rm -rf /'],
+    ['pipe', 'firefox | cat'],
+    ['ampersand', 'firefox & echo pwned'],
+    ['backtick', 'firefox `echo pwned`'],
+    ['dollar paren', 'firefox $(echo pwned)'],
+    ['curly braces', 'firefox {a,b}'],
+    ['redirect out', 'firefox > /dev/null'],
+    ['redirect in', 'firefox < /dev/null'],
+    ['backslash', 'firefox \\n'],
+    ['exclamation', 'firefox !history'],
+    ['newline', 'firefox\necho pwned'],
+    ['carriage return', 'firefox\recho pwned'],
+  ])('rejects command with %s', (_label, cmd) => {
+    expect(() => validateBrowserCommand(cmd)).toThrow(/Unsafe browser command/)
   })
 })
 
