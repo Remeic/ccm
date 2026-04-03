@@ -14,6 +14,21 @@ import { findClaudeBinary, getAuthStatus, spawnClaude } from '../../src/lib/clau
 const mockExecFileSync = vi.mocked(execFileSync)
 const mockSpawn = vi.mocked(spawn)
 
+function withMockedPlatform<T>(platform: NodeJS.Platform, fn: () => T): T {
+  const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform')
+  if (!originalPlatform) {
+    throw new Error('process.platform descriptor not found')
+  }
+
+  Object.defineProperty(process, 'platform', { value: platform })
+
+  try {
+    return fn()
+  } finally {
+    Object.defineProperty(process, 'platform', originalPlatform)
+  }
+}
+
 function createFakeChild(): ChildProcess & { stdout: Readable } {
   const emitter = new EventEmitter()
   const stdout = new Readable({ read() {} })
@@ -46,11 +61,14 @@ afterEach(() => {
 })
 
 describe('findClaudeBinary', () => {
-  test('returns path when claude binary is found in PATH', () => {
+  test('uses "which" command on non-win32 platform', () => {
     mockExecFileSync.mockReturnValue('  /usr/local/bin/claude  \n')
-    expect(findClaudeBinary()).toBe('/usr/local/bin/claude')
-    const expectedCmd = process.platform === 'win32' ? 'where' : 'which'
-    expect(mockExecFileSync).toHaveBeenCalledWith(expectedCmd, ['claude'], expect.anything())
+
+    withMockedPlatform('darwin', () => {
+      expect(findClaudeBinary()).toBe('/usr/local/bin/claude')
+    })
+
+    expect(mockExecFileSync).toHaveBeenCalledWith('which', ['claude'], expect.anything())
   })
 
   test('throws when claude binary is not found', () => {
@@ -74,15 +92,13 @@ describe('findClaudeBinary', () => {
   })
 
   test('uses "where" command on win32 platform', () => {
-    // biome-ignore lint/style/noNonNullAssertion: platform always exists on process
-    const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform')!
-    Object.defineProperty(process, 'platform', { value: 'win32' })
     mockExecFileSync.mockReturnValue('C:\\Program Files\\claude.exe\n')
 
-    expect(findClaudeBinary()).toBe('C:\\Program Files\\claude.exe')
-    expect(mockExecFileSync).toHaveBeenCalledWith('where', ['claude'], expect.anything())
+    withMockedPlatform('win32', () => {
+      expect(findClaudeBinary()).toBe('C:\\Program Files\\claude.exe')
+    })
 
-    Object.defineProperty(process, 'platform', originalPlatform)
+    expect(mockExecFileSync).toHaveBeenCalledWith('where', ['claude'], expect.anything())
   })
 })
 
