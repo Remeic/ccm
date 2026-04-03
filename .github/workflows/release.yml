@@ -21,7 +21,7 @@ jobs:
       tag_name: ${{ steps.release.outputs.tag_name }}
       version: ${{ steps.release.outputs.version }}
     steps:
-      - uses: googleapis/release-please-action@5a0d81e5e71771424cf91e319a7ef4d75d35e67b # v4.4.0
+      - uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4.4.0
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
@@ -32,6 +32,8 @@ jobs:
     needs: release-please
     if: needs.release-please.outputs.release_created == 'true'
     runs-on: ubuntu-latest
+    env:
+      NPM_PUBLISH_ACCESS: ${{ vars.NPM_PUBLISH_ACCESS || 'restricted' }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -46,6 +48,12 @@ jobs:
       - run: bun run build
       - run: bun run test:coverage
       - name: Publish to npm
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN || secrets.NODE_AUTH_TOKEN }}
+        shell: bash
+        run: |
+          PUBLISH_ARGS=(publish --access "$NPM_PUBLISH_ACCESS")
+
+          if [[ "$NPM_PUBLISH_ACCESS" == "public" ]]; then
+            PUBLISH_ARGS+=(--provenance)
+          fi
+
+          npm "${PUBLISH_ARGS[@]}"

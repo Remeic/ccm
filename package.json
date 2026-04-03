@@ -1,5 +1,5 @@
 {
-  "name": "ccm-cli",
+  "name": "@remeic/ccm",
   "version": "0.1.0",
   "description": "nvm-like manager for Claude Code profiles",
   "license": "MIT",
@@ -22,7 +22,7 @@
   ],
   "type": "module",
   "bin": {
-    "ccm": "./dist/index.js"
+    "ccm": "dist/index.js"
   },
   "files": [
     "dist"
@@ -42,9 +42,6 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "dependencies": {
     "commander": "^13.1.0",
