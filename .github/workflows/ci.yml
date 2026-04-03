@@ -23,7 +23,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: bun install --frozen-lockfile
-      # bun audit not supported yet
+      # bun audit not supported yet — generate lockfile for npm audit
+      - run: npm i --package-lock-only
       - run: npm audit --audit-level=high
         continue-on-error: true
       - run: bun run build
