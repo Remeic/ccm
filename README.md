@@ -67,47 +67,20 @@ Claude Code stores authentication in a single config directory. If you use multi
 
 ## Install
 
-### Package Managers
-
 ```sh
 npm install -g @remeic/ccm
-```
-
-```sh
 pnpm add -g @remeic/ccm
-```
-
-```sh
 yarn global add @remeic/ccm
-```
-
-```sh
 bun add -g @remeic/ccm
-```
-
-### Homebrew
-
-```sh
 brew install remeic/tap/ccm
 ```
 
 Homebrew core already ships an unrelated `ccm` formula, so install this one with the fully qualified tap name.
 
-### Without Installing
-
 ```sh
 npx @remeic/ccm <command>
-```
-
-```sh
 pnpm dlx @remeic/ccm <command>
-```
-
-```sh
 yarn dlx @remeic/ccm <command>
-```
-
-```sh
 bunx @remeic/ccm <command>
 ```
 
