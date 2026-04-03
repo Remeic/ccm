@@ -145,6 +145,7 @@ ccm stores all data under `~/.ccm/`:
 ```
 ~/.ccm/
 ├── config.json              # Profile metadata (name, label, createdAt)
+├── browsers/                # Browser wrapper scripts (when browser has args)
 └── profiles/
     ├── work/                # Isolated Claude config directory
     └── personal/            # Isolated Claude config directory
@@ -162,7 +163,8 @@ src/
 │   ├── constants.ts         # Path constants (~/.ccm, profiles dir, config file)
 │   ├── config.ts            # Config file I/O with atomic writes
 │   ├── profiles.ts          # Profile directory management and validation
-│   └── claude.ts            # Claude binary discovery, spawning, auth status
+│   ├── claude.ts            # Claude binary discovery, spawning, auth status
+│   └── browsers.ts          # Browser wrapper generation and validation
 └── commands/
     ├── create.ts            # Create profile (with rollback on failure)
     ├── list.ts              # List profiles with auth status
@@ -294,6 +296,7 @@ If the process crashes mid-write, the original config file remains intact. The c
     "work": {
       "name": "work",
       "label": "Work account",
+      "browser": "/path/to/browser",
       "createdAt": "2025-03-15T10:30:00.000Z"
     }
   }
