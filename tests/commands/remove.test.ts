@@ -5,25 +5,20 @@ import { registerRemove } from '../../src/commands/remove.js'
 vi.mock('node:readline', () => ({
   createInterface: vi.fn(),
 }))
-vi.mock('../../src/lib/config.js', () => ({
-  removeProfile: vi.fn(),
-}))
-vi.mock('../../src/lib/profiles.js', () => ({
-  removeProfileDir: vi.fn(),
-  profileExists: vi.fn(),
+vi.mock('../../src/lib/profile-store.js', () => ({
+  getStoredProfile: vi.fn(),
+  removeStoredProfile: vi.fn(),
 }))
 
 import { createInterface } from 'node:readline'
-import { removeProfile } from '../../src/lib/config.js'
-import { profileExists, removeProfileDir } from '../../src/lib/profiles.js'
+import { getStoredProfile, removeStoredProfile } from '../../src/lib/profile-store.js'
 
 const mockCreateInterface = vi.mocked(createInterface)
-const mockRemoveProfile = vi.mocked(removeProfile)
-const mockRemoveProfileDir = vi.mocked(removeProfileDir)
-const mockProfileExists = vi.mocked(profileExists)
+const mockGetStoredProfile = vi.mocked(getStoredProfile)
+const mockRemoveStoredProfile = vi.mocked(removeStoredProfile)
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  vi.resetAllMocks()
   vi.spyOn(console, 'log').mockImplementation(() => {})
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.spyOn(process, 'exit').mockImplementation(code => {
@@ -40,16 +35,22 @@ function createProgram() {
 
 describe('command: remove', () => {
   test('removes profile directory and config entry with --force', async () => {
-    mockProfileExists.mockReturnValue(true)
+    mockGetStoredProfile.mockReturnValue({
+      name: 'work',
+      dir: '/tmp/profiles/work',
+      state: 'ready',
+      hasConfig: true,
+      hasDirectory: true,
+      meta: { name: 'work', createdAt: '2026-01-01' },
+    })
     const program = createProgram()
     await program.parseAsync(['node', 'ccm', 'remove', 'work', '--force'])
 
-    expect(mockRemoveProfileDir).toHaveBeenCalledWith('work')
-    expect(mockRemoveProfile).toHaveBeenCalledWith('work')
+    expect(mockRemoveStoredProfile).toHaveBeenCalledWith('work')
   })
 
   test('fails if profile does not exist', async () => {
-    mockProfileExists.mockReturnValue(false)
+    mockGetStoredProfile.mockReturnValue(undefined)
     const program = createProgram()
     await expect(program.parseAsync(['node', 'ccm', 'remove', 'ghost', '--force'])).rejects.toThrow(
       'exit:1',
@@ -57,7 +58,14 @@ describe('command: remove', () => {
   })
 
   test('prints success message after removal', async () => {
-    mockProfileExists.mockReturnValue(true)
+    mockGetStoredProfile.mockReturnValue({
+      name: 'test',
+      dir: '/tmp/profiles/test',
+      state: 'ready',
+      hasConfig: true,
+      hasDirectory: true,
+      meta: { name: 'test', createdAt: '2026-01-01' },
+    })
     const log = vi.spyOn(console, 'log')
     const program = createProgram()
     await program.parseAsync(['node', 'ccm', 'remove', 'test', '--force'])
@@ -66,8 +74,15 @@ describe('command: remove', () => {
   })
 
   test('prints error message on failure', async () => {
-    mockProfileExists.mockReturnValue(true)
-    mockRemoveProfileDir.mockImplementation(() => {
+    mockGetStoredProfile.mockReturnValue({
+      name: 'bad',
+      dir: '/tmp/profiles/bad',
+      state: 'ready',
+      hasConfig: true,
+      hasDirectory: true,
+      meta: { name: 'bad', createdAt: '2026-01-01' },
+    })
+    mockRemoveStoredProfile.mockImplementation(() => {
       throw new Error('fs error')
     })
     const errLog = vi.spyOn(console, 'error')
@@ -80,9 +95,15 @@ describe('command: remove', () => {
   })
 
   test('confirms and removes when user answers y', async () => {
-    mockProfileExists.mockReturnValue(true)
-    mockRemoveProfileDir.mockReset()
-    mockRemoveProfile.mockReset()
+    mockGetStoredProfile.mockReturnValue({
+      name: 'work',
+      dir: '/tmp/profiles/work',
+      state: 'ready',
+      hasConfig: true,
+      hasDirectory: true,
+      meta: { name: 'work', createdAt: '2026-01-01' },
+    })
+    mockRemoveStoredProfile.mockReset()
     const closeFn = vi.fn()
     mockCreateInterface.mockReturnValue({
       question: (_q: string, cb: (answer: string) => void) => cb('y'),
@@ -91,13 +112,19 @@ describe('command: remove', () => {
     const program = createProgram()
     await program.parseAsync(['node', 'ccm', 'remove', 'work'])
 
-    expect(mockRemoveProfileDir).toHaveBeenCalledWith('work')
-    expect(mockRemoveProfile).toHaveBeenCalledWith('work')
+    expect(mockRemoveStoredProfile).toHaveBeenCalledWith('work')
     expect(closeFn).toHaveBeenCalled()
   })
 
   test('cancels removal when user answers n', async () => {
-    mockProfileExists.mockReturnValue(true)
+    mockGetStoredProfile.mockReturnValue({
+      name: 'work',
+      dir: '/tmp/profiles/work',
+      state: 'ready',
+      hasConfig: true,
+      hasDirectory: true,
+      meta: { name: 'work', createdAt: '2026-01-01' },
+    })
     mockCreateInterface.mockReturnValue({
       question: (_q: string, cb: (answer: string) => void) => cb('n'),
       close: vi.fn(),
@@ -107,14 +134,20 @@ describe('command: remove', () => {
     await program.parseAsync(['node', 'ccm', 'remove', 'work'])
 
     expect(log).toHaveBeenCalledWith('Cancelled')
-    expect(mockRemoveProfileDir).not.toHaveBeenCalled()
-    expect(mockRemoveProfile).not.toHaveBeenCalled()
+    expect(mockRemoveStoredProfile).not.toHaveBeenCalled()
   })
 
   test('handles non-Error throw in catch block', async () => {
-    mockProfileExists.mockReturnValue(true)
-    mockRemoveProfile.mockReset()
-    mockRemoveProfile.mockImplementation(() => {
+    mockGetStoredProfile.mockReturnValue({
+      name: 'work',
+      dir: '/tmp/profiles/work',
+      state: 'ready',
+      hasConfig: true,
+      hasDirectory: true,
+      meta: { name: 'work', createdAt: '2026-01-01' },
+    })
+    mockRemoveStoredProfile.mockReset()
+    mockRemoveStoredProfile.mockImplementation(() => {
       throw 'string error'
     })
     const errLog = vi.spyOn(console, 'error')
@@ -123,5 +156,20 @@ describe('command: remove', () => {
       'exit:1',
     )
     expect(errLog).toHaveBeenCalledWith(expect.stringContaining('string error'))
+  })
+
+  test('shows drift state in success message for orphaned profiles', async () => {
+    mockGetStoredProfile.mockReturnValue({
+      name: 'orphan',
+      dir: '/tmp/profiles/orphan',
+      state: 'orphaned',
+      hasConfig: false,
+      hasDirectory: true,
+    })
+    const log = vi.spyOn(console, 'log')
+    const program = createProgram()
+    await program.parseAsync(['node', 'ccm', 'remove', 'orphan', '--force'])
+
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('(orphaned)'))
   })
 })

@@ -1,5 +1,5 @@
 import type { Command } from 'commander'
-import { ensureBrowserWrapper } from '../lib/browsers.js'
+import { ensureBrowserWrapper, removeBrowserWrapper } from '../lib/browsers.js'
 import { addProfile } from '../lib/config.js'
 import { createProfileDir, removeProfileDir } from '../lib/profiles.js'
 
@@ -21,9 +21,14 @@ export function registerCreate(program: Command): void {
             createdAt: new Date().toISOString(),
           })
         } catch (configErr) {
-          // Rollback: remove orphaned directory if config write fails
+          // Rollback any partially created on-disk state if config persistence fails.
           try {
             removeProfileDir(name)
+          } catch {
+            /* best-effort cleanup */
+          }
+          try {
+            removeBrowserWrapper(name)
           } catch {
             /* best-effort cleanup */
           }

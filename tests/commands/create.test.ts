@@ -11,9 +11,10 @@ vi.mock('../../src/lib/profiles.js', () => ({
 }))
 vi.mock('../../src/lib/browsers.js', () => ({
   ensureBrowserWrapper: vi.fn(),
+  removeBrowserWrapper: vi.fn(),
 }))
 
-import { ensureBrowserWrapper } from '../../src/lib/browsers.js'
+import { ensureBrowserWrapper, removeBrowserWrapper } from '../../src/lib/browsers.js'
 import { addProfile } from '../../src/lib/config.js'
 import { createProfileDir, removeProfileDir } from '../../src/lib/profiles.js'
 
@@ -21,6 +22,7 @@ const mockAddProfile = vi.mocked(addProfile)
 const mockCreateProfileDir = vi.mocked(createProfileDir)
 const mockRemoveProfileDir = vi.mocked(removeProfileDir)
 const mockEnsureBrowserWrapper = vi.mocked(ensureBrowserWrapper)
+const mockRemoveBrowserWrapper = vi.mocked(removeBrowserWrapper)
 
 beforeEach(() => {
   vi.resetAllMocks()
@@ -101,6 +103,7 @@ describe('command: create', () => {
       const program = createProgram()
       expect(() => program.parse(['node', 'ccm', 'create', 'bad'])).toThrow('exit:1')
       expect(mockRemoveProfileDir).toHaveBeenCalledWith('bad')
+      expect(mockRemoveBrowserWrapper).toHaveBeenCalledWith('bad')
     })
 
     test('handles rollback failure silently when addProfile fails', () => {

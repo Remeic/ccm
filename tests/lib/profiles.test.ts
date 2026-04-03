@@ -3,10 +3,13 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import {
   createProfileDir,
+  finalizeStagedProfileDirRemoval,
   getProfileDir,
   listProfileDirs,
   profileExists,
   removeProfileDir,
+  restoreStagedProfileDir,
+  stageProfileDirRemoval,
   validateProfileName,
 } from '../../src/lib/profiles.js'
 import { cleanupTempDir, createTempCcmHome, type TempCcmHome } from '../helpers.js'
@@ -101,6 +104,27 @@ describe('removeProfileDir', () => {
     createProfileDir('remove', tmp.profilesDir)
     removeProfileDir('remove', tmp.profilesDir)
     expect(existsSync(join(tmp.profilesDir, 'keep'))).toBe(true)
+  })
+})
+
+describe('staged profile removal', () => {
+  test('stages and restores an existing profile directory', () => {
+    const dir = createProfileDir('staged', tmp.profilesDir)
+    const stagedDir = stageProfileDirRemoval('staged', tmp.profilesDir)
+
+    expect(existsSync(dir)).toBe(false)
+    expect(existsSync(stagedDir)).toBe(true)
+
+    restoreStagedProfileDir(stagedDir, 'staged', tmp.profilesDir)
+    expect(existsSync(dir)).toBe(true)
+  })
+
+  test('finalizes a staged profile directory removal', () => {
+    createProfileDir('staged', tmp.profilesDir)
+    const stagedDir = stageProfileDirRemoval('staged', tmp.profilesDir)
+
+    finalizeStagedProfileDirRemoval(stagedDir)
+    expect(existsSync(stagedDir)).toBe(false)
   })
 })
 
