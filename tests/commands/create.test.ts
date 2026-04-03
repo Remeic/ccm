@@ -9,16 +9,21 @@ vi.mock('../../src/lib/profiles.js', () => ({
   createProfileDir: vi.fn(),
   removeProfileDir: vi.fn(),
 }))
+vi.mock('../../src/lib/browsers.js', () => ({
+  ensureBrowserWrapper: vi.fn(),
+}))
 
+import { ensureBrowserWrapper } from '../../src/lib/browsers.js'
 import { addProfile } from '../../src/lib/config.js'
 import { createProfileDir, removeProfileDir } from '../../src/lib/profiles.js'
 
 const mockAddProfile = vi.mocked(addProfile)
 const mockCreateProfileDir = vi.mocked(createProfileDir)
 const mockRemoveProfileDir = vi.mocked(removeProfileDir)
+const mockEnsureBrowserWrapper = vi.mocked(ensureBrowserWrapper)
 
 beforeEach(() => {
-  vi.clearAllMocks()
+  vi.resetAllMocks()
   vi.spyOn(console, 'log').mockImplementation(() => {})
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.spyOn(process, 'exit').mockImplementation(code => {
@@ -120,6 +125,39 @@ describe('command: create', () => {
       const program = createProgram()
       expect(() => program.parse(['node', 'ccm', 'create', 'bad'])).toThrow('exit:1')
       expect(errLog).toHaveBeenCalledWith(expect.stringContaining('string error'))
+    })
+
+    test('passes --browser option through ensureBrowserWrapper to addProfile', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/profiles/work')
+      mockEnsureBrowserWrapper.mockReturnValue('/usr/bin/firefox')
+      const program = createProgram()
+      program.parse(['node', 'ccm', 'create', 'work', '--browser', '/usr/bin/firefox'])
+
+      expect(mockEnsureBrowserWrapper).toHaveBeenCalledWith('work', '/usr/bin/firefox')
+      expect(mockAddProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'work', browser: '/usr/bin/firefox' }),
+      )
+    })
+
+    test('stores browser wrapper path when browser command has spaces', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/profiles/work')
+      mockEnsureBrowserWrapper.mockReturnValue('/home/.ccm/browsers/work.sh')
+      const program = createProgram()
+      program.parse(['node', 'ccm', 'create', 'work', '--browser', 'open -a Firefox'])
+
+      expect(mockEnsureBrowserWrapper).toHaveBeenCalledWith('work', 'open -a Firefox')
+      expect(mockAddProfile).toHaveBeenCalledWith(
+        expect.objectContaining({ browser: '/home/.ccm/browsers/work.sh' }),
+      )
+    })
+
+    test('does not call ensureBrowserWrapper when no --browser', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/profiles/work')
+      const program = createProgram()
+      program.parse(['node', 'ccm', 'create', 'work'])
+
+      expect(mockEnsureBrowserWrapper).not.toHaveBeenCalled()
+      expect(mockAddProfile).toHaveBeenCalledWith(expect.objectContaining({ browser: undefined }))
     })
   })
 })
