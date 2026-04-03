@@ -120,6 +120,20 @@ describe('command: create', () => {
       expect(errLog).toHaveBeenCalledWith(expect.stringContaining('config write failed'))
     })
 
+    test('handles browser wrapper cleanup failure silently when addProfile fails', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/profiles/bad')
+      mockAddProfile.mockImplementation(() => {
+        throw new Error('config write failed')
+      })
+      mockRemoveBrowserWrapper.mockImplementation(() => {
+        throw new Error('wrapper cleanup failed')
+      })
+      const errLog = vi.spyOn(console, 'error')
+      const program = createProgram()
+      expect(() => program.parse(['node', 'ccm', 'create', 'bad'])).toThrow('exit:1')
+      expect(errLog).toHaveBeenCalledWith(expect.stringContaining('config write failed'))
+    })
+
     test('handles non-Error throw in catch block', () => {
       mockCreateProfileDir.mockImplementation(() => {
         throw 'string error'

@@ -126,6 +126,10 @@ describe('staged profile removal', () => {
     finalizeStagedProfileDirRemoval(stagedDir)
     expect(existsSync(stagedDir)).toBe(false)
   })
+
+  test('throws when staging a missing profile directory', () => {
+    expect(() => stageProfileDirRemoval('ghost', tmp.profilesDir)).toThrow('does not exist')
+  })
 })
 
 describe('getProfileDir', () => {
