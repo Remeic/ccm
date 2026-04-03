@@ -26,6 +26,7 @@ Switch between Claude Code accounts instantly. Like `nvm` for Claude Code profil
   - [Config Persistence](#config-persistence)
   - [Claude Binary Discovery](#claude-binary-discovery)
 - [Configuration](#configuration)
+- [Privacy](#privacy)
 - [Comparison](#comparison)
 - [FAQ](#faq)
 - [Contributing](#contributing)
@@ -70,13 +71,70 @@ $ ccm use work
 
 | Command | Description |
 |---|---|
-| `ccm create <name> [-l label]` | Create a new profile with an optional label |
+| `ccm create <name> [-l label] [-b browser]` | Create a profile. `-b` sets the browser for OAuth |
 | `ccm list` | List all profiles with auth status |
-| `ccm use <name> [-- args]` | Launch Claude Code with a profile. Args after `--` are passed through to Claude |
-| `ccm login <name> [--console]` | Authenticate a profile. Use `--console` for API key auth |
+| `ccm use <name> [-- args]` | Launch Claude Code. Args after `--` are passed to Claude |
+| `ccm login <name> [--console] [-b browser] [--url-only]` | Authenticate a profile |
 | `ccm status [name]` | Show auth status for one or all profiles |
-| `ccm remove <name> [-f]` | Remove a profile. `-f` skips the confirmation prompt |
-| `ccm run <name> -p <prompt>` | Run a prompt non-interactively with a specific profile |
+| `ccm remove <name> [-f]` | Remove a profile. `-f` skips confirmation |
+| `ccm run <name> -p <prompt>` | Run a prompt non-interactively |
+
+## Passing Flags and Environment Variables
+
+Everything after `--` in `ccm use` is forwarded to `claude`. Env vars from your shell are inherited.
+
+```bash
+# Pass flags
+ccm use work -- --dangerously-skip-permissions
+
+# Env vars + flags
+CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 ccm use work -- --dangerously-skip-permissions
+
+# Non-interactive with env vars
+CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 ccm run work -p "explain this codebase"
+```
+
+For combos you use often, set up shell aliases:
+
+```bash
+# ~/.zshrc or ~/.bashrc
+alias cwork='CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 ccm use work -- --dangerously-skip-permissions'
+alias cpersonal='ccm use personal -- --dangerously-skip-permissions'
+```
+
+## Multi-Account Login
+
+Each profile has isolated auth. Claude Code manages credentials in macOS Keychain; ccm stores nothing.
+
+`ccm login` launches the interactive Claude TUI which supports both auto-redirect (localhost callback) and manual code paste.
+
+### Different Browser per Profile
+
+```bash
+# Specify browser for this login
+ccm login work --browser firefox
+
+# Persist browser in the profile
+ccm create work --browser "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+ccm login work  # always opens Chrome
+
+# Chrome with a specific profile directory
+ccm create client --browser "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --profile-directory=Profile\ 2"
+```
+
+### URL-Only Mode
+
+```bash
+ccm login work --url-only
+```
+
+Suppresses auto-opening a browser. Claude prints the auth URL — copy it, open in whichever browser you want. After ~3 seconds the TUI shows "Paste code here if prompted >" where you paste the code from the browser.
+
+### API Key Auth
+
+```bash
+ccm login work --console
+```
 
 ## How It Works
 
@@ -259,6 +317,18 @@ ccm locates the Claude binary using the following strategy:
 | `CLAUDE_BIN` | Override the path to the Claude binary. Useful if Claude is installed in a non-standard location |
 
 All ccm data is stored in `~/.ccm/`. This includes the config file and all profile directories.
+
+## Privacy
+
+**ccm does not collect, store, or transmit any user data.** There is no telemetry, no analytics, no network calls of any kind.
+
+Everything stays on your machine:
+
+- **Profile metadata** (name, label, creation date) is stored locally in `~/.ccm/config.json`
+- **Auth tokens** are managed entirely by Claude Code inside each profile directory — ccm never reads or touches them
+- **No outbound connections** — ccm only spawns the local Claude binary, it never contacts any remote server
+
+You can verify this yourself: the entire codebase has a single runtime dependency ([Commander.js](https://github.com/tj/commander.js) for CLI parsing) and makes zero HTTP requests.
 
 ## Comparison
 
