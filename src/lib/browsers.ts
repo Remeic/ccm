@@ -3,11 +3,22 @@ import { join } from 'node:path'
 import type { ProfileMeta } from '../types.js'
 import { BROWSERS_DIR } from './constants.js'
 
+const SHELL_METACHAR = /[;|&`$(){}<>\\!\n\r]/
+
+export function validateBrowserCommand(cmd: string): void {
+  if (SHELL_METACHAR.test(cmd)) {
+    throw new Error(
+      `Unsafe browser command "${cmd}". Shell metacharacters (;|&\`$(){}<>\\!) are not allowed.`,
+    )
+  }
+}
+
 export function ensureBrowserWrapper(
   profileName: string,
   browserCommand: string,
   browsersDir = BROWSERS_DIR,
 ): string {
+  validateBrowserCommand(browserCommand)
   if (!browserCommand.includes(' ')) return browserCommand
 
   if (!existsSync(browsersDir)) mkdirSync(browsersDir, { recursive: true })
