@@ -1,3 +1,5 @@
+declare const __PKG_VERSION__: string
+
 import { Command } from 'commander'
 import { registerCreate } from './commands/create.js'
 import { registerList } from './commands/list.js'
@@ -9,7 +11,7 @@ import { registerUse } from './commands/use.js'
 
 const program = new Command()
   .name('ccm')
-  .version('0.1.0')
+  .version(__PKG_VERSION__)
   .description('Manage multiple Claude Code profiles')
 
 registerCreate(program)
