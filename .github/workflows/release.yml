@@ -35,6 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HOMEBREW_TAP_REPOSITORY: ${{ vars.HOMEBREW_TAP_REPOSITORY || 'remeic/homebrew-tap' }}
+      HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
       NPM_PUBLISH_ACCESS: ${{ vars.NPM_PUBLISH_ACCESS || 'public' }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -60,7 +61,7 @@ jobs:
 
           npm "${PUBLISH_ARGS[@]}"
       - name: Resolve npm tarball
-        if: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
+        if: env.HOMEBREW_TAP_GITHUB_TOKEN != ''
         id: npm-tarball
         shell: bash
         env:
@@ -83,7 +84,7 @@ jobs:
           echo "Failed to resolve npm tarball for ${PACKAGE_NAME}@${PACKAGE_VERSION}" >&2
           exit 1
       - name: Compute Homebrew sha256
-        if: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
+        if: env.HOMEBREW_TAP_GITHUB_TOKEN != ''
         id: tarball-sha
         shell: bash
         run: |
@@ -92,21 +93,21 @@ jobs:
           SHA256="$(shasum -a 256 package.tgz | awk '{print $1}')"
           echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
       - name: Checkout Homebrew tap
-        if: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
+        if: env.HOMEBREW_TAP_GITHUB_TOKEN != ''
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           repository: ${{ env.HOMEBREW_TAP_REPOSITORY }}
-          token: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          token: ${{ env.HOMEBREW_TAP_GITHUB_TOKEN }}
           path: homebrew-tap
       - name: Generate Homebrew formula
-        if: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
+        if: env.HOMEBREW_TAP_GITHUB_TOKEN != ''
         run: |
           node scripts/homebrew/generate-formula.mjs \
             --version "${{ needs.release-please.outputs.version }}" \
             --sha256 "${{ steps.tarball-sha.outputs.sha256 }}" \
             --output homebrew-tap/Formula/ccm.rb
       - name: Publish Homebrew formula
-        if: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN != '' }}
+        if: env.HOMEBREW_TAP_GITHUB_TOKEN != ''
         shell: bash
         working-directory: homebrew-tap
         env:
@@ -125,5 +126,5 @@ jobs:
           git commit -m "chore: update ccm to ${RELEASE_VERSION}"
           git push
       - name: Homebrew tap not configured
-        if: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN == '' }}
+        if: env.HOMEBREW_TAP_GITHUB_TOKEN == ''
         run: echo "Skipping Homebrew tap publish because HOMEBREW_TAP_GITHUB_TOKEN is not set."
