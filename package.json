@@ -6,12 +6,12 @@
   "author": "Giulio Fagioli",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/remeic/ccm.git"
+    "url": "git+https://github.com/Remeic/ccm.git"
   },
   "bugs": {
-    "url": "https://github.com/remeic/ccm/issues"
+    "url": "https://github.com/Remeic/ccm/issues"
   },
-  "homepage": "https://github.com/remeic/ccm#readme",
+  "homepage": "https://github.com/Remeic/ccm#readme",
   "keywords": [
     "claude",
     "claude-code",
