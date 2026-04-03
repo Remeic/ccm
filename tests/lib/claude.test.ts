@@ -157,6 +157,36 @@ describe('spawnClaude', () => {
     })
     expect(() => spawnClaude('/dir', [])).toThrow('Claude Code not found')
   })
+
+  test('sets BROWSER env var when opts.browser is provided', () => {
+    mockExecFileSync.mockReturnValue('/bin/claude\n')
+    mockSpawn.mockReturnValue(createFakeChild())
+
+    spawnClaude('/dir', ['auth', 'login'], { browser: '/usr/bin/firefox' })
+
+    const envArg = mockSpawn.mock.calls[0]?.[2] as { env: Record<string, string> }
+    expect(envArg.env.BROWSER).toBe('/usr/bin/firefox')
+  })
+
+  test('does not set BROWSER when opts is undefined', () => {
+    mockExecFileSync.mockReturnValue('/bin/claude\n')
+    mockSpawn.mockReturnValue(createFakeChild())
+
+    spawnClaude('/dir', ['auth', 'login'])
+
+    const envArg = mockSpawn.mock.calls[0]?.[2] as { env: Record<string, string | undefined> }
+    expect(envArg.env.BROWSER).toBeUndefined()
+  })
+
+  test('does not set BROWSER when opts.browser is undefined', () => {
+    mockExecFileSync.mockReturnValue('/bin/claude\n')
+    mockSpawn.mockReturnValue(createFakeChild())
+
+    spawnClaude('/dir', ['auth', 'login'], { browser: undefined })
+
+    const envArg = mockSpawn.mock.calls[0]?.[2] as { env: Record<string, string | undefined> }
+    expect(envArg.env.BROWSER).toBeUndefined()
+  })
 })
 
 describe('getAuthStatus', () => {
