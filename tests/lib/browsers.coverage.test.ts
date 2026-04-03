@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
+function normalizePath(path: string): string {
+  return path.replaceAll('\\', '/')
+}
+
 afterEach(() => {
   vi.resetModules()
   vi.doUnmock('node:fs')
@@ -30,7 +34,7 @@ describe('browsers coverage branches', () => {
 
     vi.doMock('node:fs', () => ({
       chmodSync: vi.fn(),
-      existsSync: vi.fn((path: string) => path === '/browsers'),
+      existsSync: vi.fn((path: string) => normalizePath(path) === '/browsers'),
       mkdirSync,
       renameSync: vi.fn(),
       rmSync: vi.fn(),
@@ -51,10 +55,13 @@ describe('browsers coverage branches', () => {
 
     vi.doMock('node:fs', () => ({
       chmodSync: vi.fn(),
-      existsSync: vi.fn(
-        (path: string) =>
-          path === '/browsers/work.sh' || path === `/browsers/work.sh.staged-${pid}-1700000000000`,
-      ),
+      existsSync: vi.fn((path: string) => {
+        const normalized = normalizePath(path)
+        return (
+          normalized === '/browsers/work.sh' ||
+          normalized === `/browsers/work.sh.staged-${pid}-1700000000000`
+        )
+      }),
       mkdirSync: vi.fn(),
       renameSync,
       rmSync: vi.fn(),
@@ -66,9 +73,12 @@ describe('browsers coverage branches', () => {
 
     const stagedPath = stageBrowserWrapperRemoval('work', '/browsers')
 
-    expect(stagedPath).toBe(`/browsers/work.sh.staged-${pid}-1700000000000-1`)
-    expect(renameSync).toHaveBeenCalledWith(
-      '/browsers/work.sh',
+    expect(normalizePath(stagedPath as string)).toBe(
+      `/browsers/work.sh.staged-${pid}-1700000000000-1`,
+    )
+    expect(renameSync).toHaveBeenCalledTimes(1)
+    expect(normalizePath(renameSync.mock.calls[0]?.[0] as string)).toBe('/browsers/work.sh')
+    expect(normalizePath(renameSync.mock.calls[0]?.[1] as string)).toBe(
       `/browsers/work.sh.staged-${pid}-1700000000000-1`,
     )
 
@@ -89,7 +99,7 @@ describe('browsers coverage branches', () => {
     const { stageBrowserWrapperRemoval } = await import('../../src/lib/browsers.js')
 
     expect(() => stageBrowserWrapperRemoval('work', '/browsers')).toThrow(
-      'Could not allocate a temporary path for "/browsers/work.sh"',
+      /Could not allocate a temporary path/,
     )
   })
 
@@ -100,9 +110,10 @@ describe('browsers coverage branches', () => {
     vi.doMock('node:fs', () => ({
       chmodSync: vi.fn(),
       existsSync: vi.fn((path: string) => {
-        if (path === '/browsers/work.sh') return true
-        if (path === `/browsers/work.sh.staged-${pid}-1700000000000`) return true
-        const match = path.match(
+        const normalized = normalizePath(path)
+        if (normalized === '/browsers/work.sh') return true
+        if (normalized === `/browsers/work.sh.staged-${pid}-1700000000000`) return true
+        const match = normalized.match(
           new RegExp(`^/browsers/work\\.sh\\.staged-${pid}-1700000000000-(\\d+)$`),
         )
         if (!match) return false
@@ -118,7 +129,7 @@ describe('browsers coverage branches', () => {
     const { stageBrowserWrapperRemoval } = await import('../../src/lib/browsers.js')
 
     expect(() => stageBrowserWrapperRemoval('work', '/browsers')).toThrow(
-      'Could not allocate a temporary path for "/browsers/work.sh"',
+      /Could not allocate a temporary path/,
     )
 
     dateSpy.mockRestore()

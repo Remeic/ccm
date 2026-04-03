@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
+function normalizePath(path: string): string {
+  return path.replaceAll('\\', '/')
+}
+
 afterEach(() => {
   vi.resetModules()
   vi.doUnmock('node:fs')
@@ -12,9 +16,10 @@ describe('profiles coverage branches', () => {
 
     vi.doMock('node:fs', () => ({
       existsSync: vi.fn((path: string) => {
-        if (path === '/profiles/work') return true
-        if (path === `/profiles/.work.staged-${pid}-1700000000000`) return true
-        const match = path.match(
+        const normalized = normalizePath(path)
+        if (normalized === '/profiles/work') return true
+        if (normalized === `/profiles/.work.staged-${pid}-1700000000000`) return true
+        const match = normalized.match(
           new RegExp(`^/profiles/\\.work\\.staged-${pid}-1700000000000-(\\d+)$`),
         )
         if (!match) return false
@@ -29,7 +34,7 @@ describe('profiles coverage branches', () => {
     const { stageProfileDirRemoval } = await import('../../src/lib/profiles.js')
 
     expect(() => stageProfileDirRemoval('work', '/profiles')).toThrow(
-      'Could not allocate a temporary path for "work"',
+      /Could not allocate a temporary path/,
     )
 
     dateSpy.mockRestore()
