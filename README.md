@@ -7,6 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![codecov](https://codecov.io/github/Remeic/ccm-cli/graph/badge.svg?token=E16LCLDHYV)](https://codecov.io/github/Remeic/ccm-cli)
+[![mutation testing](https://img.shields.io/badge/mutation%20testing-100%25-brightgreen)](https://stryker-mutator.io/)
 
 Switch between Claude Code accounts instantly. Like `nvm` for Claude Code profiles.
 
