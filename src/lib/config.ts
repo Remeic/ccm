@@ -29,7 +29,7 @@ export function saveConfig(config: CcmConfig, configFile = CONFIG_FILE): void {
   const dir = dirname(configFile)
   mkdirSync(dir, { recursive: true })
   const tmp = `${configFile}.tmp`
-  writeFileSync(tmp, JSON.stringify(config, null, 2))
+  writeFileSync(tmp, JSON.stringify(config, null, 2), { mode: 0o600 })
   renameSync(tmp, configFile)
 }
 

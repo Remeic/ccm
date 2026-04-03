@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, statSync, writeFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import {
   addProfile,
@@ -104,6 +104,12 @@ describe('saveConfig', () => {
   test('writes valid JSON', () => {
     saveConfig({ profiles: { a: { name: 'a', createdAt: '2026-01-01' } } }, tmp.configFile)
     expect(() => JSON.parse(readFileSync(tmp.configFile, 'utf-8'))).not.toThrow()
+  })
+
+  test('writes config with restrictive permissions (0o600)', () => {
+    saveConfig({ profiles: {} }, tmp.configFile)
+    const mode = statSync(tmp.configFile).mode & 0o777
+    expect(mode).toBe(0o600)
   })
 
   test('handles concurrent writes without data loss', () => {
