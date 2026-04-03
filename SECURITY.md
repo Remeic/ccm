@@ -11,7 +11,7 @@ Only the latest release is supported with security updates.
 
 ## Reporting a Vulnerability
 
-Report vulnerabilities via [GitHub Security Advisories](https://github.com/remeic/ccm-cli/security/advisories/new).
+Report vulnerabilities via [GitHub Security Advisories](https://github.com/remeic/ccm/security/advisories/new).
 
 Do not open public issues for security vulnerabilities.
 

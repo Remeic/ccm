@@ -1,5 +1,5 @@
 name: Feature Request
-description: Suggest a new feature for ccm-cli
+description: Suggest a new feature for ccm
 labels: ["enhancement"]
 body:
   - type: textarea

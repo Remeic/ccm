@@ -6,12 +6,12 @@
   "author": "Giulio Fagioli",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/remeic/ccm-cli.git"
+    "url": "git+https://github.com/remeic/ccm.git"
   },
   "bugs": {
-    "url": "https://github.com/remeic/ccm-cli/issues"
+    "url": "https://github.com/remeic/ccm/issues"
   },
-  "homepage": "https://github.com/remeic/ccm-cli#readme",
+  "homepage": "https://github.com/remeic/ccm#readme",
   "keywords": [
     "claude",
     "claude-code",
@@ -30,6 +30,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "homebrew:formula": "node scripts/homebrew/generate-formula.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

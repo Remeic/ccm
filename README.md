@@ -2,11 +2,11 @@
 
 > Multi-profile manager for Claude Code
 
-[![CI](https://github.com/remeic/ccm-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/remeic/ccm-cli/actions/workflows/ci.yml)
+[![CI](https://github.com/remeic/ccm/actions/workflows/ci.yml/badge.svg)](https://github.com/remeic/ccm/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/%40remeic%2Fccm.svg)](https://www.npmjs.com/package/@remeic/ccm)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
-[![codecov](https://codecov.io/github/Remeic/ccm-cli/graph/badge.svg?token=E16LCLDHYV)](https://codecov.io/github/Remeic/ccm-cli)
+[![codecov](https://codecov.io/github/Remeic/ccm/graph/badge.svg?token=E16LCLDHYV)](https://codecov.io/github/Remeic/ccm)
 [![mutation testing](https://img.shields.io/badge/mutation%20testing-100%25-brightgreen)](https://stryker-mutator.io/)
 
 <p align="center">
@@ -64,6 +64,14 @@ Claude Code stores authentication in a single config directory. If you use multi
 ```sh
 npm i -g @remeic/ccm
 ```
+
+Or with Homebrew:
+
+```sh
+brew install remeic/tap/ccm
+```
+
+Homebrew core already ships an unrelated `ccm` formula, so install this one with the fully qualified tap name.
 
 Or run without installing:
 
@@ -393,6 +401,21 @@ All profiles and their auth tokens are lost. Claude Code itself is unaffected.
 ccm uses cross-platform binary discovery (`which`/`where`) and standard Node.js filesystem APIs. It works on macOS, Linux, and Windows.
 
 ## Contributing
+
+### Homebrew Releases
+
+Homebrew publication is handled through a dedicated tap, not `homebrew/core`. After `npm publish`, the release workflow updates `Formula/ccm.rb` in the tap repository.
+
+Required repository configuration:
+
+- `HOMEBREW_TAP_GITHUB_TOKEN`: GitHub token with write access to the tap repo
+- `HOMEBREW_TAP_REPOSITORY`: optional repository override, defaults to `remeic/homebrew-tap`
+
+Generate the formula locally:
+
+```sh
+bun run homebrew:formula -- --sha256 <npm-tarball-sha256> --output /tmp/ccm.rb
+```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
