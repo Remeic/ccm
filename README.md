@@ -10,33 +10,45 @@
 [![mutation testing](https://img.shields.io/badge/mutation%20testing-100%25-brightgreen)](https://stryker-mutator.io/)
 
 <p align="center">
-  <img src="./docs/assets/ccm-logo.png" alt="ccm logo" width="88" />
+  <img src="./docs/assets/ccm-logo.png" alt="ccm logo" width="180" />
 </p>
 
-Switch between Claude Code accounts instantly. Like `nvm` for Claude Code profiles.
+## Switch between Claude Code accounts instantly. Like `nvm` for Claude Code profiles.
+
+<p align="center">
+  <img src="./docs/assets/intro.gif" alt="ccm in action in a terminal view" />
+</p>
 
 ## Table of Contents
 
-- [Why](#why)
-- [Prerequisites](#prerequisites)
-- [Install](#install)
-- [Quick Start](#quick-start)
-- [Commands](#commands)
-- [How It Works](#how-it-works)
-  - [Architecture Overview](#architecture-overview)
-  - [Profile Isolation](#profile-isolation)
-  - [Profile Lifecycle](#profile-lifecycle)
-  - [Launching Claude](#launching-claude)
-  - [Authentication](#authentication)
-  - [Removing Profiles](#removing-profiles)
-  - [Config Persistence](#config-persistence)
-  - [Claude Binary Discovery](#claude-binary-discovery)
-- [Configuration](#configuration)
-- [Privacy](#privacy)
-- [Comparison](#comparison)
-- [FAQ](#faq)
-- [Contributing](#contributing)
-- [License](#license)
+- [ccm](#ccm)
+  - [Switch between Claude Code accounts instantly. Like `nvm` for Claude Code profiles.](#switch-between-claude-code-accounts-instantly-like-nvm-for-claude-code-profiles)
+  - [Table of Contents](#table-of-contents)
+  - [Why](#why)
+  - [Prerequisites](#prerequisites)
+  - [Install](#install)
+  - [Quick Start](#quick-start)
+  - [Commands](#commands)
+  - [Passing Flags and Environment Variables](#passing-flags-and-environment-variables)
+  - [Multi-Account Login](#multi-account-login)
+    - [Different Browser per Profile](#different-browser-per-profile)
+    - [URL-Only Mode](#url-only-mode)
+    - [API Key Auth](#api-key-auth)
+  - [How It Works](#how-it-works)
+    - [Architecture Overview](#architecture-overview)
+    - [Profile Isolation](#profile-isolation)
+    - [Profile Lifecycle](#profile-lifecycle)
+    - [Launching Claude](#launching-claude)
+    - [Authentication](#authentication)
+    - [Removing Profiles](#removing-profiles)
+    - [Config Persistence](#config-persistence)
+    - [Claude Binary Discovery](#claude-binary-discovery)
+  - [Configuration](#configuration)
+  - [Privacy](#privacy)
+  - [Comparison](#comparison)
+  - [FAQ](#faq)
+  - [Contributing](#contributing)
+  - [License](#license)
 
 ## Why
 
@@ -77,15 +89,15 @@ $ ccm use work
 
 ## Commands
 
-| Command | Description |
-|---|---|
-| `ccm create <name> [-l label] [-b browser]` | Create a profile. `-b` sets the browser for OAuth |
-| `ccm list` | List all profiles with auth status, including drifted entries |
-| `ccm use <name> [-- args]` | Launch Claude Code. Args after `--` are passed to Claude |
-| `ccm login <name> [--console] [-b browser] [--url-only]` | Authenticate a profile |
-| `ccm status [name]` | Show auth status and storage state for one or all profiles |
-| `ccm remove <name> [-f]` | Remove a profile. `-f` skips confirmation |
-| `ccm run <name> -p <prompt>` | Run a prompt non-interactively |
+| Command                                                  | Description                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------- |
+| `ccm create <name> [-l label] [-b browser]`              | Create a profile. `-b` sets the browser for OAuth             |
+| `ccm list`                                               | List all profiles with auth status, including drifted entries |
+| `ccm use <name> [-- args]`                               | Launch Claude Code. Args after `--` are passed to Claude      |
+| `ccm login <name> [--console] [-b browser] [--url-only]` | Authenticate a profile                                        |
+| `ccm status [name]`                                      | Show auth status and storage state for one or all profiles    |
+| `ccm remove <name> [-f]`                                 | Remove a profile. `-f` skips confirmation                     |
+| `ccm run <name> -p <prompt>`                             | Run a prompt non-interactively                                |
 
 ## Passing Flags and Environment Variables
 
@@ -335,8 +347,8 @@ ccm locates the Claude binary using the following strategy:
 
 ## Configuration
 
-| Variable | Description |
-|---|---|
+| Variable     | Description                                                                                      |
+| ------------ | ------------------------------------------------------------------------------------------------ |
 | `CLAUDE_BIN` | Override the path to the Claude binary. Useful if Claude is installed in a non-standard location |
 
 All ccm data is stored in `~/.ccm/`. This includes the config file and all profile directories.
@@ -355,12 +367,12 @@ You can verify this yourself: the runtime dependencies are [Commander.js](https:
 
 ## Comparison
 
-| | Without ccm | With ccm |
-|---|---|---|
-| Switch accounts | `claude auth logout` then `claude auth login` | `ccm use work` |
-| Multiple sessions | Not possible simultaneously | Each profile runs independently |
-| Config mixing risk | High — single config directory | None — full isolation |
-| Setup per account | Manual every time | One-time `create` + `login` |
+|                    | Without ccm                                   | With ccm                        |
+| ------------------ | --------------------------------------------- | ------------------------------- |
+| Switch accounts    | `claude auth logout` then `claude auth login` | `ccm use work`                  |
+| Multiple sessions  | Not possible simultaneously                   | Each profile runs independently |
+| Config mixing risk | High — single config directory                | None — full isolation           |
+| Setup per account  | Manual every time                             | One-time `create` + `login`     |
 
 ## FAQ
 
