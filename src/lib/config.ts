@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
-import type { CcmConfig, ProfileMeta } from '../types.js'
+import { type CcmConfig, CcmConfigSchema, type ProfileMeta, ProfileMetaSchema } from '../types.js'
 import { CONFIG_FILE } from './constants.js'
 
 const DEFAULT_CONFIG: CcmConfig = { profiles: {} }
@@ -9,36 +9,29 @@ export function loadConfig(configFile = CONFIG_FILE): CcmConfig {
   try {
     const raw = readFileSync(configFile, 'utf-8')
     const parsed: unknown = JSON.parse(raw)
-    if (
-      // Stryker disable next-line ConditionalExpression: equivalent — non-object fails `in` operator with TypeError caught below
-      typeof parsed !== 'object' ||
-      parsed === null ||
-      !('profiles' in parsed) ||
-      typeof (parsed as Record<string, unknown>).profiles !== 'object' ||
-      (parsed as Record<string, unknown>).profiles === null
-    ) {
-      return { ...DEFAULT_CONFIG, profiles: {} }
-    }
-    return parsed as CcmConfig
+    const result = CcmConfigSchema.safeParse(parsed)
+    return result.success ? result.data : { ...DEFAULT_CONFIG, profiles: {} }
   } catch {
     return { ...DEFAULT_CONFIG, profiles: {} }
   }
 }
 
 export function saveConfig(config: CcmConfig, configFile = CONFIG_FILE): void {
+  const validatedConfig = CcmConfigSchema.parse(config)
   const dir = dirname(configFile)
   mkdirSync(dir, { recursive: true })
   const tmp = `${configFile}.tmp`
-  writeFileSync(tmp, JSON.stringify(config, null, 2), { mode: 0o600 })
+  writeFileSync(tmp, JSON.stringify(validatedConfig, null, 2), { mode: 0o600 })
   renameSync(tmp, configFile)
 }
 
 export function addProfile(meta: ProfileMeta, configFile = CONFIG_FILE): void {
   const config = loadConfig(configFile)
-  if (config.profiles[meta.name]) {
-    throw new Error(`Profile "${meta.name}" already exists`)
+  const validatedMeta = ProfileMetaSchema.parse(meta)
+  if (config.profiles[validatedMeta.name]) {
+    throw new Error(`Profile "${validatedMeta.name}" already exists`)
   }
-  config.profiles[meta.name] = meta
+  config.profiles[validatedMeta.name] = validatedMeta
   saveConfig(config, configFile)
 }
 

@@ -5,7 +5,13 @@ export default {
   plugins: ['@stryker-mutator/vitest-runner', '@stryker-mutator/typescript-checker'],
   checkers: ['typescript'],
   tsconfigFile: 'tsconfig.json',
-  mutate: ['src/lib/config.ts', 'src/lib/profiles.ts', 'src/lib/claude.ts'],
+  mutate: [
+    'src/lib/browsers.ts',
+    'src/lib/claude.ts',
+    'src/lib/config.ts',
+    'src/lib/profile-store.ts',
+    'src/lib/profiles.ts',
+  ],
   ignorePatterns: ['dist', 'coverage', '.stryker-tmp'],
   reporters: ['progress', 'html', 'clear-text'],
   htmlReporter: {

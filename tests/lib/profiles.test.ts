@@ -1,12 +1,15 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import {
   createProfileDir,
+  finalizeStagedProfileDirRemoval,
   getProfileDir,
   listProfileDirs,
   profileExists,
   removeProfileDir,
+  restoreStagedProfileDir,
+  stageProfileDirRemoval,
   validateProfileName,
 } from '../../src/lib/profiles.js'
 import { cleanupTempDir, createTempCcmHome, type TempCcmHome } from '../helpers.js'
@@ -58,6 +61,10 @@ describe('validateProfileName', () => {
   test('accepts names at exactly 64 characters', () => {
     expect(() => validateProfileName('a'.repeat(64))).not.toThrow()
   })
+
+  test('prefers invalid-name error over too-long error for invalid 64-char names', () => {
+    expect(() => validateProfileName(`!${'a'.repeat(63)}`)).toThrow('Invalid profile name')
+  })
 })
 
 describe('createProfileDir', () => {
@@ -101,6 +108,67 @@ describe('removeProfileDir', () => {
     createProfileDir('remove', tmp.profilesDir)
     removeProfileDir('remove', tmp.profilesDir)
     expect(existsSync(join(tmp.profilesDir, 'keep'))).toBe(true)
+  })
+})
+
+describe('staged profile removal', () => {
+  test('stages and restores an existing profile directory', () => {
+    const dir = createProfileDir('staged', tmp.profilesDir)
+    const stagedDir = stageProfileDirRemoval('staged', tmp.profilesDir)
+
+    expect(existsSync(dir)).toBe(false)
+    expect(existsSync(stagedDir)).toBe(true)
+
+    restoreStagedProfileDir(stagedDir, 'staged', tmp.profilesDir)
+    expect(existsSync(dir)).toBe(true)
+  })
+
+  test('finalizes a staged profile directory removal', () => {
+    createProfileDir('staged', tmp.profilesDir)
+    const stagedDir = stageProfileDirRemoval('staged', tmp.profilesDir)
+
+    finalizeStagedProfileDirRemoval(stagedDir)
+    expect(existsSync(stagedDir)).toBe(false)
+  })
+
+  test('throws when staging a missing profile directory', () => {
+    expect(() => stageProfileDirRemoval('ghost', tmp.profilesDir)).toThrow('does not exist')
+  })
+
+  test('uses a second staged path candidate when the first one already exists', async () => {
+    vi.resetModules()
+    const pid = process.pid
+    const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000)
+    const renameSync = vi.fn()
+    const existsSync = vi
+      .fn()
+      .mockImplementation(
+        (path: string) =>
+          path === join(tmp.profilesDir, 'work') ||
+          path === join(tmp.profilesDir, `.work.staged-${pid}-1700000000000`),
+      )
+
+    vi.doMock('node:fs', () => ({
+      existsSync,
+      mkdirSync: vi.fn(),
+      readdirSync: vi.fn(),
+      renameSync,
+      rmSync: vi.fn(),
+    }))
+
+    const { stageProfileDirRemoval: stageWithMocks } = await import('../../src/lib/profiles.js')
+
+    const stagedDir = stageWithMocks('work', tmp.profilesDir)
+
+    expect(stagedDir).toBe(join(tmp.profilesDir, `.work.staged-${pid}-1700000000000-1`))
+    expect(renameSync).toHaveBeenCalledWith(
+      join(tmp.profilesDir, 'work'),
+      join(tmp.profilesDir, `.work.staged-${pid}-1700000000000-1`),
+    )
+
+    dateSpy.mockRestore()
+    vi.doUnmock('node:fs')
+    vi.resetModules()
   })
 })
 

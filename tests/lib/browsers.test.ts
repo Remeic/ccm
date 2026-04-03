@@ -3,7 +3,12 @@ import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
 import {
   ensureBrowserWrapper,
+  finalizeStagedBrowserWrapperRemoval,
+  getBrowserWrapperPath,
+  removeBrowserWrapper,
   resolveBrowser,
+  restoreStagedBrowserWrapper,
+  stageBrowserWrapperRemoval,
   validateBrowserCommand,
 } from '../../src/lib/browsers.js'
 import { cleanupTempDir, createTempCcmHome, type TempCcmHome } from '../helpers.js'
@@ -124,5 +129,39 @@ describe('resolveBrowser', () => {
   test('returns undefined when meta has no browser field', () => {
     const meta = { name: 'work', createdAt: '2026-01-01' }
     expect(resolveBrowser(undefined, meta)).toBeUndefined()
+  })
+})
+
+describe('browser wrapper lifecycle', () => {
+  test('returns canonical wrapper path for a profile', () => {
+    expect(getBrowserWrapperPath('work', browsersDir)).toBe(join(browsersDir, 'work.sh'))
+  })
+
+  test('removes wrapper when it exists', () => {
+    ensureBrowserWrapper('work', 'open -a Chrome', browsersDir)
+    removeBrowserWrapper('work', browsersDir)
+    expect(existsSync(join(browsersDir, 'work.sh'))).toBe(false)
+  })
+
+  test('ignores missing wrapper on remove', () => {
+    expect(() => removeBrowserWrapper('ghost', browsersDir)).not.toThrow()
+  })
+
+  test('stages and restores wrapper removal', () => {
+    ensureBrowserWrapper('work', 'open -a Chrome', browsersDir)
+    const staged = stageBrowserWrapperRemoval('work', browsersDir)
+
+    expect(staged).toBeDefined()
+    expect(existsSync(join(browsersDir, 'work.sh'))).toBe(false)
+    restoreStagedBrowserWrapper(staged as string, 'work', browsersDir)
+    expect(existsSync(join(browsersDir, 'work.sh'))).toBe(true)
+  })
+
+  test('finalizes staged wrapper removal', () => {
+    ensureBrowserWrapper('work', 'open -a Chrome', browsersDir)
+    const staged = stageBrowserWrapperRemoval('work', browsersDir)
+
+    finalizeStagedBrowserWrapperRemoval(staged as string)
+    expect(existsSync(staged as string)).toBe(false)
   })
 })

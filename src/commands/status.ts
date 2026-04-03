@@ -1,7 +1,6 @@
 import type { Command } from 'commander'
 import { getAuthStatus } from '../lib/claude.js'
-import { loadConfig } from '../lib/config.js'
-import { getProfileDir, profileExists } from '../lib/profiles.js'
+import { getStoredProfile, listStoredProfiles } from '../lib/profile-store.js'
 
 export function registerStatus(program: Command): void {
   program
@@ -10,34 +9,40 @@ export function registerStatus(program: Command): void {
     .action(async (name?: string) => {
       try {
         if (name) {
-          if (!profileExists(name)) {
+          const profile = getStoredProfile(name)
+          if (!profile) {
             throw new Error(`Profile "${name}" does not exist`)
           }
-          const dir = getProfileDir(name)
-          const status = await getAuthStatus(dir)
+          const status = profile.hasDirectory ? await getAuthStatus(profile.dir) : undefined
           console.log(`Profile: ${name}`)
-          console.log(`Logged in: ${status.loggedIn}`)
-          console.log(`Auth method: ${status.authMethod}`)
-          if (status.email) console.log(`Email: ${status.email}`)
-          if (status.orgName) console.log(`Org: ${status.orgName}`)
-          if (status.subscriptionType) console.log(`Subscription: ${status.subscriptionType}`)
+          console.log(`State: ${profile.state}`)
+          console.log(`Logged in: ${status?.loggedIn ?? 'unknown'}`)
+          console.log(`Auth method: ${status?.authMethod ?? 'unavailable'}`)
+          if (profile.meta?.createdAt) console.log(`Created: ${profile.meta.createdAt}`)
+          if (!profile.hasDirectory) console.log('Directory: missing')
+          if (status?.email) console.log(`Email: ${status.email}`)
+          if (status?.orgName) console.log(`Org: ${status.orgName}`)
+          if (status?.subscriptionType) console.log(`Subscription: ${status.subscriptionType}`)
         } else {
-          const config = loadConfig()
-          const names = Object.keys(config.profiles)
-          if (names.length === 0) {
+          const profiles = listStoredProfiles()
+          if (profiles.length === 0) {
             console.log('No profiles.')
             return
           }
           const statuses = await Promise.all(
-            names.map(async n => ({
-              name: n,
-              status: await getAuthStatus(getProfileDir(n)),
+            profiles.map(async profile => ({
+              profile,
+              status: profile.hasDirectory ? await getAuthStatus(profile.dir) : undefined,
             })),
           )
-          for (const { name: n, status } of statuses) {
-            const icon = status.loggedIn ? '\x1b[32m●\x1b[0m' : '\x1b[31m●\x1b[0m'
-            const account = status.email ?? status.apiKeySource ?? '—'
-            console.log(`${icon} ${n.padEnd(20)} ${status.authMethod.padEnd(15)} ${account}`)
+          for (const { profile, status } of statuses) {
+            const icon = status?.loggedIn === true ? '\x1b[32m●\x1b[0m' : '\x1b[31m●\x1b[0m'
+            const account = status?.email ?? status?.apiKeySource ?? '—'
+            const authMethod = status?.authMethod ?? 'unavailable'
+            const stateSuffix = profile.state === 'ready' ? '' : ` [${profile.state}]`
+            console.log(
+              `${icon} ${profile.name.padEnd(20)} ${authMethod.padEnd(15)} ${account}${stateSuffix}`,
+            )
           }
         }
       } catch (e) {

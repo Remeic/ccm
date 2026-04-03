@@ -1,5 +1,7 @@
 import { type ChildProcess, execFileSync, spawn } from 'node:child_process'
-import type { ClaudeAuthStatus } from '../types.js'
+import { type ClaudeAuthStatus, ClaudeAuthStatusSchema } from '../types.js'
+
+const UNKNOWN_AUTH_STATUS: ClaudeAuthStatus = { loggedIn: false, authMethod: 'unknown' }
 
 export function findClaudeBinary(): string {
   if (process.env.CLAUDE_BIN) return process.env.CLAUDE_BIN
@@ -38,7 +40,7 @@ export function getAuthStatus(profileDir: string): Promise<ClaudeAuthStatus> {
 
     let stdout = ''
     if (!child.stdout) {
-      resolve({ loggedIn: false, authMethod: 'unknown' })
+      resolve(UNKNOWN_AUTH_STATUS)
       return
     }
     child.stdout.on('data', (chunk: Buffer) => {
@@ -47,34 +49,23 @@ export function getAuthStatus(profileDir: string): Promise<ClaudeAuthStatus> {
 
     const timeout = setTimeout(() => {
       child.kill()
-      resolve({ loggedIn: false, authMethod: 'unknown' })
+      resolve(UNKNOWN_AUTH_STATUS)
     }, 10_000)
 
     child.on('close', () => {
       clearTimeout(timeout)
       try {
         const parsed: unknown = JSON.parse(stdout)
-        if (
-          // Stryker disable next-line ConditionalExpression: equivalent — non-object fails `in` operator with TypeError caught below
-          typeof parsed === 'object' &&
-          parsed !== null &&
-          'loggedIn' in parsed &&
-          typeof (parsed as Record<string, unknown>).loggedIn === 'boolean' &&
-          'authMethod' in parsed &&
-          typeof (parsed as Record<string, unknown>).authMethod === 'string'
-        ) {
-          resolve(parsed as ClaudeAuthStatus)
-        } else {
-          resolve({ loggedIn: false, authMethod: 'unknown' })
-        }
+        const result = ClaudeAuthStatusSchema.safeParse(parsed)
+        resolve(result.success ? result.data : UNKNOWN_AUTH_STATUS)
       } catch {
-        resolve({ loggedIn: false, authMethod: 'unknown' })
+        resolve(UNKNOWN_AUTH_STATUS)
       }
     })
 
     child.on('error', () => {
       clearTimeout(timeout)
-      resolve({ loggedIn: false, authMethod: 'unknown' })
+      resolve(UNKNOWN_AUTH_STATUS)
     })
   })
 }

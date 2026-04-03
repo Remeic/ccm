@@ -7,6 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![codecov](https://codecov.io/github/Remeic/ccm-cli/graph/badge.svg?token=E16LCLDHYV)](https://codecov.io/github/Remeic/ccm-cli)
+[![mutation testing](https://img.shields.io/badge/mutation%20testing-100%25-brightgreen)](https://stryker-mutator.io/)
 
 Switch between Claude Code accounts instantly. Like `nvm` for Claude Code profiles.
 
@@ -73,10 +74,10 @@ $ ccm use work
 | Command | Description |
 |---|---|
 | `ccm create <name> [-l label] [-b browser]` | Create a profile. `-b` sets the browser for OAuth |
-| `ccm list` | List all profiles with auth status |
+| `ccm list` | List all profiles with auth status, including drifted entries |
 | `ccm use <name> [-- args]` | Launch Claude Code. Args after `--` are passed to Claude |
 | `ccm login <name> [--console] [-b browser] [--url-only]` | Authenticate a profile |
-| `ccm status [name]` | Show auth status for one or all profiles |
+| `ccm status [name]` | Show auth status and storage state for one or all profiles |
 | `ccm remove <name> [-f]` | Remove a profile. `-f` skips confirmation |
 | `ccm run <name> -p <prompt>` | Run a prompt non-interactively |
 
@@ -152,27 +153,28 @@ ccm stores all data under `~/.ccm/`:
     └── personal/            # Isolated Claude config directory
 ```
 
-Each profile directory acts as a standalone Claude Code config directory. A central `config.json` tracks metadata. The only runtime dependency is [Commander.js](https://github.com/tj/commander.js) for CLI parsing — everything else uses Node.js built-ins.
+Each profile directory acts as a standalone Claude Code config directory. A central `config.json` tracks metadata. Runtime dependencies are [Commander.js](https://github.com/tj/commander.js) for CLI parsing and [Zod](https://zod.dev) for schema validation and type inference; everything else uses Node.js built-ins.
 
 Source code follows a clean separation between library logic and CLI wiring:
 
 ```
 src/
 ├── index.ts                 # Entry point — registers all commands
-├── types.ts                 # TypeScript interfaces
+├── types.ts                 # Zod schemas and inferred TypeScript types
 ├── lib/
 │   ├── constants.ts         # Path constants (~/.ccm, profiles dir, config file)
 │   ├── config.ts            # Config file I/O with atomic writes
 │   ├── profiles.ts          # Profile directory management and validation
+│   ├── profile-store.ts     # Reconciled config/filesystem profile view
 │   ├── claude.ts            # Claude binary discovery, spawning, auth status
 │   └── browsers.ts          # Browser wrapper generation and validation
 └── commands/
     ├── create.ts            # Create profile (with rollback on failure)
-    ├── list.ts              # List profiles with auth status
-    ├── login.ts             # Authenticate via claude auth login
+    ├── list.ts              # List profiles with auth status and drift state
+    ├── login.ts             # Authenticate via Claude TUI or --console
     ├── use.ts               # Launch Claude with profile config dir
-    ├── status.ts            # Show auth status
-    ├── remove.ts            # Remove profile (with confirmation)
+    ├── status.ts            # Show auth status and drift state
+    ├── remove.ts            # Remove profile with staged rollback
     └── run.ts               # Run prompt with specific profile
 ```
 
@@ -191,7 +193,7 @@ No symlinks, no file copying, no modification of Claude's own config directory. 
 
 ### Profile Lifecycle
 
-When you create a profile, ccm validates the name, creates the directory, and writes metadata to `config.json`. If the config write fails, the orphaned directory is rolled back.
+When you create a profile, ccm validates the name, creates the directory, creates a browser wrapper if needed, and writes metadata to `config.json`. If the config write fails, any partially created on-disk state is rolled back.
 
 ```mermaid
 flowchart TD
@@ -206,11 +208,17 @@ flowchart TD
     D -->|Success| E["Profile ready
     ✓ Next: ccm login &lt;name&gt;"]
     D -->|Failure| F["Rollback: remove
-    orphaned directory"]
+    directory and wrapper"]
     F --> ERR3["Exit with error"]
 ```
 
 Profile names must match `[a-zA-Z0-9_-]+` and cannot exceed 64 characters.
+
+`ccm list` and `ccm status` reconcile `config.json` with `~/.ccm/profiles/` instead of trusting just one source. Each profile is surfaced with one of these states:
+
+- `ready`: config entry and profile directory both exist
+- `orphaned`: directory exists but metadata is missing from `config.json`
+- `config-only`: metadata exists but the profile directory is missing
 
 ### Launching Claude
 
@@ -236,7 +244,7 @@ flowchart TD
 
 ### Authentication
 
-Login delegates entirely to Claude's own auth flow. Status checks use `claude auth status --json` with a 10-second timeout.
+Login delegates entirely to Claude's own auth flow. OAuth launches the interactive Claude TUI directly; `--console` uses `claude auth login --console`. Status checks use `claude auth status --json` with a 10-second timeout.
 
 ```mermaid
 sequenceDiagram
@@ -246,8 +254,8 @@ sequenceDiagram
 
     User->>ccm: ccm login work
     ccm->>ccm: Verify profile exists
-    ccm->>Claude: spawn "claude auth login"<br/>CLAUDE_CONFIG_DIR=~/.ccm/profiles/work/
-    Claude-->>User: Browser auth flow (or --console for API key)
+    ccm->>Claude: spawn "claude"<br/>CLAUDE_CONFIG_DIR=~/.ccm/profiles/work/
+    Claude-->>User: Interactive TUI for OAuth (or --console for API key)
     Note over Claude: Auth tokens stored<br/>in profile directory
 
     User->>ccm: ccm status work
@@ -261,22 +269,27 @@ The `--console` flag on `login` enables API key authentication instead of the br
 
 ### Removing Profiles
 
-Removal deletes both the config entry and the profile directory. By default, it asks for confirmation.
+Removal deletes the config entry, the profile directory, and any browser wrapper script. By default, it asks for confirmation.
+
+To avoid leaving config and filesystem out of sync, removal is staged: ccm temporarily renames on-disk assets, updates `config.json`, and only then finalizes deletion. If the config update fails, the staged assets are restored.
 
 ```mermaid
 flowchart TD
     A["ccm remove &lt;name&gt; [-f]"] --> B{"Profile
-    exists?"}
+    exists in config or filesystem?"}
     B -->|No| ERR["Exit with error"]
     B -->|Yes| C{"--force
     flag?"}
-    C -->|Yes| E["Remove config entry"]
+    C -->|Yes| E["Stage profile directory
+    and browser wrapper"]
     C -->|No| D["Prompt: Remove profile? (y/N)"]
     D -->|N| CANCEL["Cancelled"]
     D -->|y| E
-    E --> F["Delete profile directory
-    (recursive)"]
-    F --> G["✓ Profile removed"]
+    E --> F["Remove config entry
+    if present"]
+    F -->|Success| G["Finalize deletion"]
+    F -->|Failure| H["Restore staged assets"]
+    G --> I["✓ Profile removed"]
 ```
 
 ### Config Persistence
@@ -332,7 +345,7 @@ Everything stays on your machine:
 - **Auth tokens** are managed entirely by Claude Code inside each profile directory — ccm never reads or touches them
 - **No outbound connections** — ccm only spawns the local Claude binary, it never contacts any remote server
 
-You can verify this yourself: the entire codebase has a single runtime dependency ([Commander.js](https://github.com/tj/commander.js) for CLI parsing) and makes zero HTTP requests.
+You can verify this yourself: the runtime dependencies are [Commander.js](https://github.com/tj/commander.js) for CLI parsing and [Zod](https://zod.dev) for schema validation and type inference, and the CLI still makes zero HTTP requests.
 
 ## Comparison
 
