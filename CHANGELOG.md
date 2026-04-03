@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/Remeic/ccm/compare/ccm-v0.2.1...ccm-v0.2.2) (2026-04-03)
+
+
+### Bug Fixes
+
+* **pkg:** align repository metadata for provenance ([#21](https://github.com/Remeic/ccm/issues/21)) ([fed8771](https://github.com/Remeic/ccm/commit/fed8771654a79070d9e17d93c342a2a482c03602))
+
 ## [0.2.1](https://github.com/Remeic/ccm/compare/ccm-v0.2.0...ccm-v0.2.1) (2026-04-03)
 
 
