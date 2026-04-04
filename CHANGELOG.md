@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/Remeic/ccm/compare/ccm-v0.2.2...ccm-v0.3.0) (2026-04-04)
+
+
+### Features
+
+* add profile rename command ([#23](https://github.com/Remeic/ccm/issues/23)) ([50335a1](https://github.com/Remeic/ccm/commit/50335a10db475f273d40781d0315cbc15a890085))
+
 ## [0.2.2](https://github.com/Remeic/ccm/compare/ccm-v0.2.1...ccm-v0.2.2) (2026-04-03)
 
 
