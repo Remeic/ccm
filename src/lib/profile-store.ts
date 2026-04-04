@@ -1,18 +1,23 @@
+import { existsSync } from 'node:fs'
 import type { ProfileMeta } from '../types.js'
 import {
   finalizeStagedBrowserWrapperRemoval,
+  getBrowserWrapperPath,
+  renameBrowserWrapper,
   restoreStagedBrowserWrapper,
   stageBrowserWrapperRemoval,
 } from './browsers.js'
-import { addProfile, getProfile, loadConfig, removeProfile } from './config.js'
+import { addProfile, getProfile, loadConfig, removeProfile, renameProfile } from './config.js'
 import { BROWSERS_DIR, CONFIG_FILE, PROFILES_DIR } from './constants.js'
 import {
   finalizeStagedProfileDirRemoval,
   getProfileDir,
   listProfileDirs,
   profileExists,
+  renameProfileDir,
   restoreStagedProfileDir,
   stageProfileDirRemoval,
+  validateProfileName,
 } from './profiles.js'
 
 export type ProfileState = 'ready' | 'orphaned' | 'config-only'
@@ -144,6 +149,101 @@ export function removeStoredProfile(
       )
     }
     throw error
+  }
+}
+
+export function renameStoredProfile(
+  oldName: string,
+  newName: string,
+  configFile = CONFIG_FILE,
+  profilesDir = PROFILES_DIR,
+  browsersDir = BROWSERS_DIR,
+): void {
+  validateProfileName(newName)
+
+  if (oldName === newName) {
+    throw new Error('Old and new profile names are the same')
+  }
+
+  const profile = getStoredProfile(oldName, configFile, profilesDir)
+  if (!profile) {
+    throw new Error(`Profile "${oldName}" does not exist`)
+  }
+
+  if (getProfile(newName, configFile)) {
+    throw new Error(`Profile "${newName}" already exists`)
+  }
+  if (profileExists(newName, profilesDir)) {
+    throw new Error(`Profile directory "${newName}" already exists`)
+  }
+
+  // Step 1: rename dir (if present)
+  if (profile.hasDirectory) {
+    renameProfileDir(oldName, newName, profilesDir)
+  }
+
+  // Step 2: rename browser wrapper (if present)
+  const hadWrapper = existsSync(getBrowserWrapperPath(oldName, browsersDir))
+  if (hadWrapper) {
+    try {
+      renameBrowserWrapper(oldName, newName, browsersDir)
+    } catch (error) {
+      try {
+        rollbackRename(oldName, newName, profile.hasDirectory, false, profilesDir, browsersDir)
+      } catch (rollbackError) {
+        throw new Error(
+          `Failed to rename profile "${oldName}" to "${newName}": ${formatError(error)}. Rollback failed: ${formatError(rollbackError)}`,
+        )
+      }
+      throw error
+    }
+  }
+
+  // Step 3: rename config entry (atomic write)
+  try {
+    renameProfile(oldName, newName, configFile)
+  } catch (error) {
+    try {
+      rollbackRename(oldName, newName, profile.hasDirectory, hadWrapper, profilesDir, browsersDir)
+    } catch (rollbackError) {
+      throw new Error(
+        `Failed to rename profile "${oldName}" to "${newName}": ${formatError(error)}. Rollback failed: ${formatError(rollbackError)}`,
+      )
+    }
+    throw error
+  }
+}
+
+function rollbackRename(
+  oldName: string,
+  newName: string,
+  hadDirectory: boolean,
+  hadWrapper: boolean,
+  profilesDir: string,
+  browsersDir: string,
+): void {
+  const rollbackErrors: string[] = []
+
+  if (hadWrapper) {
+    try {
+      renameBrowserWrapper(newName, oldName, browsersDir)
+    } catch (error) {
+      rollbackErrors.push(`browser wrapper: ${formatError(error)}`)
+    }
+  }
+
+  if (hadDirectory) {
+    try {
+      renameProfileDir(newName, oldName, profilesDir)
+    } catch (error) {
+      rollbackErrors.push(`profile dir: ${formatError(error)}`)
+    }
+  }
+
+  if (rollbackErrors.length > 0) {
+    throw new Error(
+      `Rollback failed for rename "${oldName}" to "${newName}": ${rollbackErrors.join('; ')}`,
+    )
   }
 }
 
