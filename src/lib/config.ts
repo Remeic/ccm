@@ -44,6 +44,19 @@ export function removeProfile(name: string, configFile = CONFIG_FILE): void {
   saveConfig(config, configFile)
 }
 
+export function renameProfile(oldName: string, newName: string, configFile = CONFIG_FILE): void {
+  const config = loadConfig(configFile)
+  if (!config.profiles[oldName]) {
+    throw new Error(`Profile "${oldName}" not found`)
+  }
+  if (config.profiles[newName]) {
+    throw new Error(`Profile "${newName}" already exists`)
+  }
+  config.profiles[newName] = { ...config.profiles[oldName], name: newName }
+  delete config.profiles[oldName]
+  saveConfig(config, configFile)
+}
+
 export function getProfile(name: string, configFile = CONFIG_FILE): ProfileMeta | undefined {
   return loadConfig(configFile).profiles[name]
 }

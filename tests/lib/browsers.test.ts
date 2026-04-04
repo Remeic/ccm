@@ -6,6 +6,7 @@ import {
   finalizeStagedBrowserWrapperRemoval,
   getBrowserWrapperPath,
   removeBrowserWrapper,
+  renameBrowserWrapper,
   resolveBrowser,
   restoreStagedBrowserWrapper,
   stageBrowserWrapperRemoval,
@@ -129,6 +130,26 @@ describe('resolveBrowser', () => {
   test('returns undefined when meta has no browser field', () => {
     const meta = { name: 'work', createdAt: '2026-01-01' }
     expect(resolveBrowser(undefined, meta)).toBeUndefined()
+  })
+})
+
+describe('renameBrowserWrapper', () => {
+  test('renames wrapper file', () => {
+    ensureBrowserWrapper('old', 'open -a Chrome', browsersDir)
+    renameBrowserWrapper('old', 'new', browsersDir)
+    expect(existsSync(join(browsersDir, 'new.sh'))).toBe(true)
+    expect(existsSync(join(browsersDir, 'old.sh'))).toBe(false)
+  })
+
+  test('no-op when wrapper does not exist', () => {
+    expect(() => renameBrowserWrapper('ghost', 'new', browsersDir)).not.toThrow()
+  })
+
+  test('preserves wrapper content after rename', () => {
+    ensureBrowserWrapper('old', 'open -a Chrome', browsersDir)
+    renameBrowserWrapper('old', 'new', browsersDir)
+    const content = readFileSync(join(browsersDir, 'new.sh'), 'utf-8')
+    expect(content).toBe('#!/bin/sh\nexec open -a Chrome "$@"\n')
   })
 })
 
