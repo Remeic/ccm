@@ -59,6 +59,19 @@ export function getBrowserWrapperPath(profileName: string, browsersDir = BROWSER
   return join(browsersDir, `${profileName}.sh`)
 }
 
+export function renameBrowserWrapper(
+  oldName: string,
+  newName: string,
+  browsersDir = BROWSERS_DIR,
+): void {
+  const oldPath = getBrowserWrapperPath(oldName, browsersDir)
+  if (!existsSync(oldPath)) {
+    return
+  }
+  const newPath = getBrowserWrapperPath(newName, browsersDir)
+  renameSync(oldPath, newPath)
+}
+
 export function removeBrowserWrapper(profileName: string, browsersDir = BROWSERS_DIR): void {
   const wrapperPath = getBrowserWrapperPath(profileName, browsersDir)
   if (!existsSync(wrapperPath)) {
