@@ -5,6 +5,7 @@ import {
   getProfile,
   loadConfig,
   removeProfile,
+  renameProfile,
   saveConfig,
 } from '../../src/lib/config.js'
 import { cleanupTempDir, createTempCcmHome, type TempCcmHome } from '../helpers.js'
@@ -177,6 +178,49 @@ describe('removeProfile', () => {
     addProfile({ name: 'b', createdAt: '2026-01-02' }, tmp.configFile)
     removeProfile('a', tmp.configFile)
     expect(loadConfig(tmp.configFile).profiles.b).toBeDefined()
+  })
+})
+
+describe('renameProfile', () => {
+  test('renames existing profile updating key and meta.name', () => {
+    addProfile({ name: 'old', createdAt: '2026-01-01', label: 'My Label' }, tmp.configFile)
+    renameProfile('old', 'new', tmp.configFile)
+    const config = loadConfig(tmp.configFile)
+    expect(config.profiles.new).toBeDefined()
+    expect(config.profiles.new.name).toBe('new')
+    expect(config.profiles.new.label).toBe('My Label')
+    expect(config.profiles.new.createdAt).toBe('2026-01-01')
+  })
+
+  test('old key is gone after rename', () => {
+    addProfile({ name: 'old', createdAt: '2026-01-01' }, tmp.configFile)
+    renameProfile('old', 'new', tmp.configFile)
+    expect(loadConfig(tmp.configFile).profiles.old).toBeUndefined()
+  })
+
+  test('throws when old name not found', () => {
+    expect(() => renameProfile('ghost', 'new', tmp.configFile)).toThrow('not found')
+  })
+
+  test('throws when new name already exists', () => {
+    addProfile({ name: 'a', createdAt: '2026-01-01' }, tmp.configFile)
+    addProfile({ name: 'b', createdAt: '2026-01-02' }, tmp.configFile)
+    expect(() => renameProfile('a', 'b', tmp.configFile)).toThrow('already exists')
+  })
+
+  test('does not affect unrelated profiles', () => {
+    addProfile({ name: 'a', createdAt: '2026-01-01' }, tmp.configFile)
+    addProfile({ name: 'b', createdAt: '2026-01-02' }, tmp.configFile)
+    renameProfile('a', 'c', tmp.configFile)
+    expect(loadConfig(tmp.configFile).profiles.b).toBeDefined()
+  })
+
+  test('persists to disk after rename', () => {
+    addProfile({ name: 'old', createdAt: '2026-01-01' }, tmp.configFile)
+    renameProfile('old', 'new', tmp.configFile)
+    const raw = JSON.parse(readFileSync(tmp.configFile, 'utf-8'))
+    expect(raw.profiles.new.name).toBe('new')
+    expect(raw.profiles.old).toBeUndefined()
   })
 })
 
