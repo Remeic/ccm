@@ -28,6 +28,22 @@ export function createProfileDir(name: string, profilesDir = PROFILES_DIR): stri
   return dir
 }
 
+export function renameProfileDir(
+  oldName: string,
+  newName: string,
+  profilesDir = PROFILES_DIR,
+): void {
+  const oldDir = join(profilesDir, oldName)
+  const newDir = join(profilesDir, newName)
+  if (!existsSync(oldDir)) {
+    throw new Error(`Profile directory "${oldName}" does not exist`)
+  }
+  if (existsSync(newDir)) {
+    throw new Error(`Profile directory "${newName}" already exists`)
+  }
+  renameSync(oldDir, newDir)
+}
+
 export function removeProfileDir(name: string, profilesDir = PROFILES_DIR): void {
   const dir = join(profilesDir, name)
   if (!existsSync(dir)) {

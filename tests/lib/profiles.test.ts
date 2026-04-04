@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import {
@@ -8,6 +8,7 @@ import {
   listProfileDirs,
   profileExists,
   removeProfileDir,
+  renameProfileDir,
   restoreStagedProfileDir,
   stageProfileDirRemoval,
   validateProfileName,
@@ -107,6 +108,40 @@ describe('removeProfileDir', () => {
     createProfileDir('keep', tmp.profilesDir)
     createProfileDir('remove', tmp.profilesDir)
     removeProfileDir('remove', tmp.profilesDir)
+    expect(existsSync(join(tmp.profilesDir, 'keep'))).toBe(true)
+  })
+})
+
+describe('renameProfileDir', () => {
+  test('renames directory on disk', () => {
+    createProfileDir('old', tmp.profilesDir)
+    renameProfileDir('old', 'new', tmp.profilesDir)
+    expect(existsSync(join(tmp.profilesDir, 'new'))).toBe(true)
+    expect(existsSync(join(tmp.profilesDir, 'old'))).toBe(false)
+  })
+
+  test('preserves directory contents after rename', () => {
+    const dir = createProfileDir('old', tmp.profilesDir)
+    writeFileSync(join(dir, 'settings.json'), '{"key":"value"}')
+    renameProfileDir('old', 'new', tmp.profilesDir)
+    const content = readFileSync(join(tmp.profilesDir, 'new', 'settings.json'), 'utf-8')
+    expect(content).toBe('{"key":"value"}')
+  })
+
+  test('throws when source dir does not exist', () => {
+    expect(() => renameProfileDir('ghost', 'new', tmp.profilesDir)).toThrow('does not exist')
+  })
+
+  test('throws when destination dir already exists', () => {
+    createProfileDir('old', tmp.profilesDir)
+    createProfileDir('new', tmp.profilesDir)
+    expect(() => renameProfileDir('old', 'new', tmp.profilesDir)).toThrow('already exists')
+  })
+
+  test('does not affect other directories', () => {
+    createProfileDir('keep', tmp.profilesDir)
+    createProfileDir('old', tmp.profilesDir)
+    renameProfileDir('old', 'new', tmp.profilesDir)
     expect(existsSync(join(tmp.profilesDir, 'keep'))).toBe(true)
   })
 })
