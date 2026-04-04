@@ -109,6 +109,7 @@ $ ccm use work
 | `ccm use <name> [-- args]`                               | Launch Claude Code. Args after `--` are passed to Claude      |
 | `ccm login <name> [--console] [-b browser] [--url-only]` | Authenticate a profile                                        |
 | `ccm status [name]`                                      | Show auth status and storage state for one or all profiles    |
+| `ccm rename <old-name> <new-name>`                       | Rename a profile (config, directory, and browser wrapper)      |
 | `ccm remove <name> [-f]`                                 | Remove a profile. `-f` skips confirmation                     |
 | `ccm run <name> -p <prompt>`                             | Run a prompt non-interactively                                |
 
@@ -205,6 +206,7 @@ src/
     ├── login.ts             # Authenticate via Claude TUI or --console
     ├── use.ts               # Launch Claude with profile config dir
     ├── status.ts            # Show auth status and drift state
+    ├── rename.ts            # Rename profile with atomic rollback
     ├── remove.ts            # Remove profile with staged rollback
     └── run.ts               # Run prompt with specific profile
 ```
