@@ -378,6 +378,46 @@ describe('renameStoredProfile error paths', () => {
     expect(mockRenameProfile).toHaveBeenCalledWith('old', 'new', '/cfg.json')
   })
 
+  test('config rename failure rethrows original error when rollback succeeds', () => {
+    mockGetProfile.mockImplementation((name: string) => {
+      if (name === 'old') return { name: 'old', createdAt: '2026-01-01' }
+      return undefined
+    })
+    mockProfileExists.mockImplementation((name: string) => name === 'old')
+    mockExistsSync.mockReturnValue(true)
+    const originalError = new Error('config write fail')
+    mockRenameProfile.mockImplementation(() => {
+      throw originalError
+    })
+
+    let thrown: unknown
+    try {
+      renameStoredProfile('old', 'new', '/cfg.json', '/profiles', '/browsers')
+    } catch (e) {
+      thrown = e
+    }
+    expect(thrown).toBe(originalError)
+    expect((thrown as Error).message).not.toContain('Rollback failed')
+  })
+
+  test('config rename failure on config-only profile does not attempt dir rollback', () => {
+    mockGetProfile.mockImplementation((name: string) => {
+      if (name === 'old') return { name: 'old', createdAt: '2026-01-01' }
+      return undefined
+    })
+    mockProfileExists.mockReturnValue(false)
+    mockExistsSync.mockReturnValue(false)
+    mockRenameProfile.mockImplementation(() => {
+      throw new Error('config fail')
+    })
+
+    expect(() => renameStoredProfile('old', 'new', '/cfg.json', '/profiles', '/browsers')).toThrow(
+      'config fail',
+    )
+    expect(mockRenameProfileDir).not.toHaveBeenCalled()
+    expect(mockRenameBrowserWrapper).not.toHaveBeenCalled()
+  })
+
   test('handles non-Error throw in config rename', () => {
     mockGetProfile.mockImplementation((name: string) => {
       if (name === 'old') return { name: 'old', createdAt: '2026-01-01' }
