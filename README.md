@@ -19,7 +19,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![codecov](https://codecov.io/github/Remeic/ccm/graph/badge.svg?token=E16LCLDHYV)](https://codecov.io/github/Remeic/ccm)
-[![mutation testing](https://img.shields.io/badge/mutation%20testing-100%25-brightgreen)](https://stryker-mutator.io/)
+[![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2FRemeic%2Fccm%2Fmain)](https://dashboard.stryker-mutator.io/reports/github.com/Remeic/ccm/main)
 
 Manage separate Claude Code profiles for personal, work, and client accounts without repeated logout/login cycles. `ccm` keeps each profile isolated so switching is immediate and parallel sessions stay clean.
 
