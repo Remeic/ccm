@@ -13,7 +13,7 @@ export default {
     'src/lib/profiles.ts',
   ],
   ignorePatterns: ['dist', 'coverage', '.stryker-tmp'],
-  reporters: ['progress', 'html', 'clear-text'],
+  reporters: ['progress', 'html', 'clear-text', 'dashboard'],
   htmlReporter: {
     fileName: 'mutation-report/index.html',
   },
