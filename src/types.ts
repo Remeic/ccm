@@ -1,14 +1,18 @@
 import { z } from 'zod'
 
+/** Sets the accepted length boundary for managed profile names. */
 export const MAX_PROFILE_NAME_LENGTH = 64
+/** Defines the stable character policy for managed profile names. */
 export const PROFILE_NAME_PATTERN = /^[a-zA-Z0-9_-]+$/
 
+/** Validates profile names used by CCM profile operations. */
 export const ProfileNameSchema = z
   .string()
   .min(1)
   .max(MAX_PROFILE_NAME_LENGTH)
   .regex(PROFILE_NAME_PATTERN)
 
+/** Validates profile metadata stored by CCM. */
 export const ProfileMetaSchema = z
   .object({
     name: ProfileNameSchema,
@@ -18,12 +22,14 @@ export const ProfileMetaSchema = z
   })
   .passthrough()
 
+/** Validates the persisted CCM configuration shape. */
 export const CcmConfigSchema = z
   .object({
     profiles: z.record(z.string(), ProfileMetaSchema),
   })
   .passthrough()
 
+/** Validates Claude Code authentication status consumed by CCM. */
 export const ClaudeAuthStatusSchema = z
   .object({
     loggedIn: z.boolean(),

@@ -13,6 +13,7 @@ import { BROWSERS_DIR } from './constants.js'
 
 const SHELL_METACHAR = /[;|&`$(){}<>\\!\n\r]/
 
+/** Validates browser commands before they are used by profile launches. */
 export function validateBrowserCommand(cmd: string): void {
   if (SHELL_METACHAR.test(cmd)) {
     throw new Error(
@@ -21,6 +22,7 @@ export function validateBrowserCommand(cmd: string): void {
   }
 }
 
+/** Prepares a browser command for use with a managed profile. */
 export function ensureBrowserWrapper(
   profileName: string,
   browserCommand: string,
@@ -55,10 +57,12 @@ function getStagedPath(path: string): string {
   throw new Error(`Could not allocate a temporary path for "${path}"`)
 }
 
+/** Builds the browser wrapper path associated with a managed profile. */
 export function getBrowserWrapperPath(profileName: string, browsersDir = BROWSERS_DIR): string {
   return join(browsersDir, `${profileName}.sh`)
 }
 
+/** Renames the browser wrapper associated with a managed profile. */
 export function renameBrowserWrapper(
   oldName: string,
   newName: string,
@@ -72,6 +76,7 @@ export function renameBrowserWrapper(
   renameSync(oldPath, newPath)
 }
 
+/** Removes the browser wrapper associated with a managed profile. */
 export function removeBrowserWrapper(profileName: string, browsersDir = BROWSERS_DIR): void {
   const wrapperPath = getBrowserWrapperPath(profileName, browsersDir)
   if (!existsSync(wrapperPath)) {
@@ -80,6 +85,7 @@ export function removeBrowserWrapper(profileName: string, browsersDir = BROWSERS
   unlinkSync(wrapperPath)
 }
 
+/** Stages a profile browser wrapper for reversible removal. */
 export function stageBrowserWrapperRemoval(
   profileName: string,
   browsersDir = BROWSERS_DIR,
@@ -94,6 +100,7 @@ export function stageBrowserWrapperRemoval(
   return stagedPath
 }
 
+/** Restores a staged browser wrapper for a managed profile. */
 export function restoreStagedBrowserWrapper(
   stagedPath: string,
   profileName: string,
@@ -102,10 +109,12 @@ export function restoreStagedBrowserWrapper(
   renameSync(stagedPath, getBrowserWrapperPath(profileName, browsersDir))
 }
 
+/** Finalizes removal of a staged browser wrapper. */
 export function finalizeStagedBrowserWrapperRemoval(stagedPath: string): void {
   rmSync(stagedPath, { force: true })
 }
 
+/** Selects the browser command to use for a profile launch. */
 export function resolveBrowser(cliOverride?: string, meta?: ProfileMeta): string | undefined {
   return cliOverride ?? meta?.browser
 }

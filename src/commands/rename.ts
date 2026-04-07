@@ -1,6 +1,7 @@
 import type { Command } from 'commander'
 import { renameStoredProfile } from '../lib/profile-store.js'
 
+/** Registers the CLI workflow for renaming a managed profile. */
 export function registerRename(program: Command): void {
   program
     .command('rename <old-name> <new-name>')

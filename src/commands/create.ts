@@ -3,6 +3,7 @@ import { ensureBrowserWrapper, removeBrowserWrapper } from '../lib/browsers.js'
 import { addProfile } from '../lib/config.js'
 import { createProfileDir, removeProfileDir } from '../lib/profiles.js'
 
+/** Registers the CLI workflow for creating a managed profile. */
 export function registerCreate(program: Command): void {
   program
     .command('create <name>')

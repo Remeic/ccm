@@ -5,6 +5,7 @@ import { CONFIG_FILE } from './constants.js'
 
 const DEFAULT_CONFIG: CcmConfig = { profiles: {} }
 
+/** Loads the persisted CCM configuration for profile management. */
 export function loadConfig(configFile = CONFIG_FILE): CcmConfig {
   try {
     const raw = readFileSync(configFile, 'utf-8')
@@ -16,6 +17,7 @@ export function loadConfig(configFile = CONFIG_FILE): CcmConfig {
   }
 }
 
+/** Persists a validated CCM configuration for later profile operations. */
 export function saveConfig(config: CcmConfig, configFile = CONFIG_FILE): void {
   const validatedConfig = CcmConfigSchema.parse(config)
   const dir = dirname(configFile)
@@ -25,6 +27,7 @@ export function saveConfig(config: CcmConfig, configFile = CONFIG_FILE): void {
   renameSync(tmp, configFile)
 }
 
+/** Adds a profile entry to the persisted CCM configuration. */
 export function addProfile(meta: ProfileMeta, configFile = CONFIG_FILE): void {
   const config = loadConfig(configFile)
   const validatedMeta = ProfileMetaSchema.parse(meta)
@@ -35,6 +38,7 @@ export function addProfile(meta: ProfileMeta, configFile = CONFIG_FILE): void {
   saveConfig(config, configFile)
 }
 
+/** Removes a profile entry from the persisted CCM configuration. */
 export function removeProfile(name: string, configFile = CONFIG_FILE): void {
   const config = loadConfig(configFile)
   if (!config.profiles[name]) {
@@ -44,6 +48,7 @@ export function removeProfile(name: string, configFile = CONFIG_FILE): void {
   saveConfig(config, configFile)
 }
 
+/** Renames a profile entry in the persisted CCM configuration. */
 export function renameProfile(oldName: string, newName: string, configFile = CONFIG_FILE): void {
   const config = loadConfig(configFile)
   if (!config.profiles[oldName]) {
@@ -57,6 +62,7 @@ export function renameProfile(oldName: string, newName: string, configFile = CON
   saveConfig(config, configFile)
 }
 
+/** Reads a profile entry from the persisted CCM configuration. */
 export function getProfile(name: string, configFile = CONFIG_FILE): ProfileMeta | undefined {
   return loadConfig(configFile).profiles[name]
 }

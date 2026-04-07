@@ -12,6 +12,7 @@ function confirm(question: string): Promise<boolean> {
   })
 }
 
+/** Registers the CLI workflow for removing a managed profile. */
 export function registerRemove(program: Command): void {
   program
     .command('remove <name>')
