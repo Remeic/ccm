@@ -3,6 +3,7 @@ import { type ClaudeAuthStatus, ClaudeAuthStatusSchema } from '../types.js'
 
 const UNKNOWN_AUTH_STATUS: ClaudeAuthStatus = { loggedIn: false, authMethod: 'unknown' }
 
+/** Resolves the Claude Code executable used by CCM commands. */
 export function findClaudeBinary(): string {
   if (process.env.CLAUDE_BIN) return process.env.CLAUDE_BIN
   const cmd = process.platform === 'win32' ? 'where' : 'which'
@@ -16,6 +17,7 @@ export function findClaudeBinary(): string {
   }
 }
 
+/** Starts Claude Code with environment scoped to a managed profile. */
 export function spawnClaude(
   profileDir: string,
   args: string[],
@@ -30,6 +32,7 @@ export function spawnClaude(
   return spawn(bin, args, { env, stdio: 'inherit' })
 }
 
+/** Reads Claude Code authentication state for a managed profile. */
 export function getAuthStatus(profileDir: string): Promise<ClaudeAuthStatus> {
   const bin = findClaudeBinary()
   return new Promise(resolve => {

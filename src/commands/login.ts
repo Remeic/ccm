@@ -4,6 +4,7 @@ import { spawnClaude } from '../lib/claude.js'
 import { getProfile } from '../lib/config.js'
 import { getProfileDir, profileExists } from '../lib/profiles.js'
 
+/** Registers the CLI workflow for authenticating a managed profile. */
 export function registerLogin(program: Command): void {
   program
     .command('login <name>')

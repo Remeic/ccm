@@ -37,6 +37,7 @@ function getProfileState(hasConfig: boolean, hasDirectory: boolean): ProfileStat
   return 'config-only'
 }
 
+/** Lists profiles across persisted config and profile directories. */
 export function listStoredProfiles(
   configFile = CONFIG_FILE,
   profilesDir = PROFILES_DIR,
@@ -63,6 +64,7 @@ export function listStoredProfiles(
     })
 }
 
+/** Reads a stored profile from persisted config and profile directories. */
 export function getStoredProfile(
   name: string,
   configFile = CONFIG_FILE,
@@ -86,6 +88,7 @@ export function getStoredProfile(
   }
 }
 
+/** Removes a stored profile across config, directory, and browser state. */
 export function removeStoredProfile(
   name: string,
   configFile = CONFIG_FILE,
@@ -152,6 +155,7 @@ export function removeStoredProfile(
   }
 }
 
+/** Renames a stored profile across config, directory, and browser state. */
 export function renameStoredProfile(
   oldName: string,
   newName: string,

@@ -2,6 +2,7 @@ import type { Command } from 'commander'
 import { getAuthStatus } from '../lib/claude.js'
 import { getStoredProfile, listStoredProfiles } from '../lib/profile-store.js'
 
+/** Registers the CLI workflow for inspecting profile auth status. */
 export function registerStatus(program: Command): void {
   program
     .command('status [name]')
