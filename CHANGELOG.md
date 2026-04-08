@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0](https://github.com/Remeic/ccm/compare/ccm-v0.3.0...ccm-v0.4.0) (2026-04-08)
+
+
+### Features
+
+* add compliance notices for profile creation ([#29](https://github.com/Remeic/ccm/issues/29)) ([fa5dfd0](https://github.com/Remeic/ccm/commit/fa5dfd049ff76bf70d3a7148f26c9f24ffa9c201))
+
+
+### Bug Fixes
+
+* **ci:** publish Stryker dashboard report ([#27](https://github.com/Remeic/ccm/issues/27)) ([9f6e4f4](https://github.com/Remeic/ccm/commit/9f6e4f409b6b52e0f356b8a8b7ad12b038d33a4b))
+* **docs:** update mutation testing badge in README ([#25](https://github.com/Remeic/ccm/issues/25)) ([f88c32e](https://github.com/Remeic/ccm/commit/f88c32e6538498c967b91406f065db54b7812d9f))
+
 ## [0.3.0](https://github.com/Remeic/ccm/compare/ccm-v0.2.2...ccm-v0.3.0) (2026-04-04)
 
 
