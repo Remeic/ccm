@@ -6,8 +6,11 @@ export default {
   checkers: ['typescript'],
   tsconfigFile: 'tsconfig.json',
   mutate: [
+    'src/commands/compliance.ts',
+    'src/commands/create.ts',
     'src/lib/browsers.ts',
     'src/lib/claude.ts',
+    'src/lib/compliance.ts',
     'src/lib/config.ts',
     'src/lib/profile-store.ts',
     'src/lib/profiles.ts',

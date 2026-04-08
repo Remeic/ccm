@@ -1,5 +1,6 @@
 import type { Command } from 'commander'
 import { ensureBrowserWrapper, removeBrowserWrapper } from '../lib/browsers.js'
+import { getCompactComplianceNoticeLines } from '../lib/compliance.js'
 import { addProfile } from '../lib/config.js'
 import { createProfileDir, removeProfileDir } from '../lib/profiles.js'
 
@@ -36,6 +37,9 @@ export function registerCreate(program: Command): void {
           throw configErr
         }
         console.log(`\x1b[32m✓\x1b[0m Profile "${name}" created`)
+        for (const line of getCompactComplianceNoticeLines()) {
+          console.log(line)
+        }
         console.log(`  Next: ccm login ${name}`)
       } catch (e) {
         console.error(`\x1b[31m✗\x1b[0m ${e instanceof Error ? e.message : String(e)}`)
