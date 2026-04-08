@@ -5,6 +5,9 @@ import { registerCreate } from '../../src/commands/create.js'
 vi.mock('../../src/lib/config.js', () => ({
   addProfile: vi.fn(),
 }))
+vi.mock('../../src/lib/compliance.js', () => ({
+  getCompactComplianceNoticeLines: vi.fn(),
+}))
 vi.mock('../../src/lib/profiles.js', () => ({
   createProfileDir: vi.fn(),
   removeProfileDir: vi.fn(),
@@ -15,10 +18,12 @@ vi.mock('../../src/lib/browsers.js', () => ({
 }))
 
 import { ensureBrowserWrapper, removeBrowserWrapper } from '../../src/lib/browsers.js'
+import { getCompactComplianceNoticeLines } from '../../src/lib/compliance.js'
 import { addProfile } from '../../src/lib/config.js'
 import { createProfileDir, removeProfileDir } from '../../src/lib/profiles.js'
 
 const mockAddProfile = vi.mocked(addProfile)
+const mockGetCompactComplianceNoticeLines = vi.mocked(getCompactComplianceNoticeLines)
 const mockCreateProfileDir = vi.mocked(createProfileDir)
 const mockRemoveProfileDir = vi.mocked(removeProfileDir)
 const mockEnsureBrowserWrapper = vi.mocked(ensureBrowserWrapper)
@@ -26,6 +31,7 @@ const mockRemoveBrowserWrapper = vi.mocked(removeBrowserWrapper)
 
 beforeEach(() => {
   vi.resetAllMocks()
+  mockGetCompactComplianceNoticeLines.mockReturnValue(['warning line 1', 'warning line 2'])
   vi.spyOn(console, 'log').mockImplementation(() => {})
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.spyOn(process, 'exit').mockImplementation(code => {
@@ -42,6 +48,17 @@ function createProgram() {
 
 describe('command: create', () => {
   describe('profile creation', () => {
+    test('registers the documented command and option descriptions', () => {
+      const program = createProgram()
+      const command = program.commands.find(candidate => candidate.name() === 'create')
+      const labelOption = command?.options.find(option => option.long === '--label')
+      const browserOption = command?.options.find(option => option.long === '--browser')
+
+      expect(command?.description()).toBe('Create a new profile')
+      expect(labelOption?.description).toBe('Profile label')
+      expect(browserOption?.description).toBe('Browser for OAuth login')
+    })
+
     test('creates profile directory and adds to config', () => {
       mockCreateProfileDir.mockReturnValue('/tmp/profiles/work')
       const program = createProgram()
@@ -73,7 +90,18 @@ describe('command: create', () => {
       const program = createProgram()
       program.parse(['node', 'ccm', 'create', 'test'])
 
-      expect(log).toHaveBeenCalledWith(expect.stringContaining('test'))
+      expect(log).toHaveBeenCalledWith('\x1b[32m✓\x1b[0m Profile "test" created')
+    })
+
+    test('prints compact compliance notice after success', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/x')
+      const log = vi.spyOn(console, 'log')
+      const program = createProgram()
+      program.parse(['node', 'ccm', 'create', 'test'])
+
+      expect(mockGetCompactComplianceNoticeLines).toHaveBeenCalledTimes(1)
+      expect(log).toHaveBeenCalledWith('warning line 1')
+      expect(log).toHaveBeenCalledWith('warning line 2')
     })
 
     test('prints error message on failure', () => {
@@ -170,11 +198,13 @@ describe('command: create', () => {
 
     test('does not call ensureBrowserWrapper when no --browser', () => {
       mockCreateProfileDir.mockReturnValue('/tmp/profiles/work')
+      const log = vi.spyOn(console, 'log')
       const program = createProgram()
       program.parse(['node', 'ccm', 'create', 'work'])
 
       expect(mockEnsureBrowserWrapper).not.toHaveBeenCalled()
       expect(mockAddProfile).toHaveBeenCalledWith(expect.objectContaining({ browser: undefined }))
+      expect(log).toHaveBeenCalledWith('  Next: ccm login work')
     })
   })
 })
