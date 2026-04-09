@@ -1,6 +1,6 @@
 {
   "name": "@remeic/ccm",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "nvm-like manager for Claude Code profiles",
   "license": "MIT",
   "author": "Giulio Fagioli",
