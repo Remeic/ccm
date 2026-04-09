@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/Remeic/ccm/compare/ccm-v0.4.0...ccm-v0.5.0) (2026-04-09)
+
+
+### Features
+
+* add profile config copy and create --from bootstrap ([2449100](https://github.com/Remeic/ccm/commit/2449100440f628b4f076b5e4939b85bef01d90b3))
+* copy profile config and bootstrap create from profile ([25f34f8](https://github.com/Remeic/ccm/commit/25f34f88e90c818eaa0feb8a4624abf0fcc8742d))
+
 ## [0.4.0](https://github.com/Remeic/ccm/compare/ccm-v0.3.0...ccm-v0.4.0) (2026-04-08)
 
 
