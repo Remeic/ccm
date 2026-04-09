@@ -13,22 +13,6 @@
   </table>
 </div>
 
-## IMPORTANT: Claude Code ToS (Multi-Terminal Use)
-
-> **Mandatory compliance rule for this project**
-> Do **not** use the **same Claude account** from multiple terminals at the same time.
-> We enforce: **1 account = 1 person = 1 active terminal session**.
-
-- `ccm` isolates profiles. It does **not** grant any extra rights under Anthropic terms.
-- For parallel work, use separate licensed accounts/seats (or API keys under Commercial Terms).
-- No credential sharing, no shared account handoff, no "one account used by multiple people".
-- This is an intentionally strict project rule to remove ambiguity and reduce compliance risk.
-- The CLI also surfaces this via `ccm compliance` (alias: `ccm tos`) and after every successful `ccm create`.
-
-Official basis (as of April 8, 2026):
-- [Claude Code Legal & Compliance](https://code.claude.com/docs/en/legal-and-compliance): usage limits for Pro/Max assume ordinary, individual use; Anthropic may enforce auth restrictions without notice.
-- [Anthropic Consumer Terms](https://www.anthropic.com/legal/consumer-terms): account credentials/API keys must not be shared or made available to others; Anthropic may suspend/terminate for material breach.
-- [Anthropic Commercial Terms](https://www.anthropic.com/legal/commercial-terms): customer is responsible for all activity under its account.
 
 [![CI](https://github.com/remeic/ccm/actions/workflows/ci.yml/badge.svg)](https://github.com/remeic/ccm/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/%40remeic%2Fccm.svg)](https://www.npmjs.com/package/@remeic/ccm)
@@ -40,6 +24,26 @@ Official basis (as of April 8, 2026):
 
 Manage separate Claude Code profiles for personal, work, and client accounts without repeated logout/login cycles. `ccm` keeps each profile isolated so switching is immediate and parallel sessions stay clean.
 
+### IMPORTANT: Claude Code ToS (Multi-Terminal Use)
+
+> [!IMPORTANT]
+> **Mandatory compliance rule for this project**
+> Do **not** use the **same Claude account** from multiple terminals at the same time.
+> We enforce: **1 account = 1 person = 1 active terminal session**.
+>
+> - `ccm` isolates profiles. It does **not** grant any extra rights under Anthropic terms.
+> - For parallel work, use separate licensed accounts/seats (or API keys under Commercial Terms).
+> - No credential sharing, no shared account handoff, no "one account used by multiple people".
+> - This is an intentionally strict project rule to remove ambiguity and reduce compliance risk.
+> - The CLI also surfaces this via `ccm compliance` (alias: `ccm tos`) and after every successful `ccm create`.
+>
+> Official basis (as of April 8, 2026):
+> - [Claude Code Legal & Compliance](https://code.claude.com/docs/en/legal-and-compliance): usage limits for Pro/Max assume ordinary, individual use; Anthropic may enforce auth restrictions without notice.
+> - [Anthropic Consumer Terms](https://www.anthropic.com/legal/consumer-terms): account credentials/API keys must not be shared or made available to others; Anthropic may suspend/terminate for material breach.
+> - [Anthropic Commercial Terms](https://www.anthropic.com/legal/commercial-terms): customer is responsible for all activity under its account.
+
+
+
 <p align="center">
   <img src="./docs/assets/intro.gif" alt="ccm in action in a terminal view" width="100%" />
 </p>
@@ -47,7 +51,6 @@ Manage separate Claude Code profiles for personal, work, and client accounts wit
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
-- [IMPORTANT: Claude Code ToS (Multi-Terminal Use)](#important-claude-code-tos-multi-terminal-use)
 - [Why](#why)
 - [Prerequisites](#prerequisites)
 - [Install](#install)
@@ -73,6 +76,7 @@ Manage separate Claude Code profiles for personal, work, and client accounts wit
 - [Comparison](#comparison)
 - [FAQ](#faq)
 - [Contributing](#contributing)
+  - [Homebrew Releases](#homebrew-releases)
 - [License](#license)
 
 ## Why
@@ -134,7 +138,7 @@ $ ccm use work
 | `ccm use <name> [-- args]`                               | Launch Claude Code. Args after `--` are passed to Claude      |
 | `ccm login <name> [--console] [-b browser] [--url-only]` | Authenticate a profile                                        |
 | `ccm status [name]`                                      | Show auth status and storage state for one or all profiles    |
-| `ccm rename <old-name> <new-name>`                       | Rename a profile (config, directory, and browser wrapper)      |
+| `ccm rename <old-name> <new-name>`                       | Rename a profile (config, directory, and browser wrapper)     |
 | `ccm remove <name> [-f]`                                 | Remove a profile. `-f` skips confirmation                     |
 | `ccm run <name> -p <prompt>`                             | Run a prompt non-interactively                                |
 
