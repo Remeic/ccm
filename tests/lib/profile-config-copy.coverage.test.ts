@@ -1,3 +1,4 @@
+import { join } from 'node:path'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 
 afterEach(() => {
@@ -468,6 +469,7 @@ describe('profile-config-copy coverage branches', () => {
     const now = 1_700_000_000_000
     const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(now)
     const renameSync = vi.fn()
+    const expectedStagedPath = join('/tmp/target', `.a.json.staged-${pid}-${now}`)
 
     vi.doMock('node:fs', () => ({
       cpSync: vi.fn(() => {
@@ -500,7 +502,7 @@ describe('profile-config-copy coverage branches', () => {
       }),
     ).toThrow()
 
-    expect(renameSync.mock.calls[0]?.[1]).toBe(`/tmp/target/.a.json.staged-${pid}-${now}`)
+    expect(renameSync.mock.calls[0]?.[1]).toBe(expectedStagedPath)
     dateSpy.mockRestore()
   })
 
@@ -509,7 +511,7 @@ describe('profile-config-copy coverage branches', () => {
     const now = 1_700_000_000_000
     const dateSpy = vi.spyOn(Date, 'now').mockReturnValue(now)
     const renameSync = vi.fn()
-    const firstCandidate = `/tmp/target/.a.json.staged-${pid}-${now}`
+    const firstCandidate = join('/tmp/target', `.a.json.staged-${pid}-${now}`)
 
     vi.doMock('node:fs', () => ({
       cpSync: vi.fn(() => {
@@ -542,7 +544,9 @@ describe('profile-config-copy coverage branches', () => {
       }),
     ).toThrow()
 
-    expect(renameSync.mock.calls[0]?.[1]).toBe(`/tmp/target/.a.json.staged-${pid}-${now}-1`)
+    expect(renameSync.mock.calls[0]?.[1]).toBe(
+      join('/tmp/target', `.a.json.staged-${pid}-${now}-1`),
+    )
     dateSpy.mockRestore()
   })
 })
