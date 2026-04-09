@@ -62,6 +62,7 @@ Manage separate Claude Code profiles for personal, work, and client accounts wit
   - [Different Browser per Profile](#different-browser-per-profile)
   - [URL-Only Mode](#url-only-mode)
   - [API Key Auth](#api-key-auth)
+  - [Copying Config Between Profiles](#copying-config-between-profiles)
 - [How It Works](#how-it-works)
   - [Architecture Overview](#architecture-overview)
   - [Profile Isolation](#profile-isolation)
@@ -132,7 +133,7 @@ $ ccm use work
 
 | Command                                                  | Description                                                   |
 | -------------------------------------------------------- | ------------------------------------------------------------- |
-| `ccm create <name> [-l label] [-b browser]`              | Create a profile. `-b` sets the browser for OAuth             |
+| `ccm create <name> [-l label] [-b browser] [--from p]`   | Create a profile. `--from` seeds non-auth config              |
 | `ccm compliance` / `ccm tos`                             | Show the compliance notice, disclaimer, and official sources  |
 | `ccm list`                                               | List all profiles with auth status, including drifted entries |
 | `ccm use <name> [-- args]`                               | Launch Claude Code. Args after `--` are passed to Claude      |
@@ -140,6 +141,7 @@ $ ccm use work
 | `ccm status [name]`                                      | Show auth status and storage state for one or all profiles    |
 | `ccm rename <old-name> <new-name>`                       | Rename a profile (config, directory, and browser wrapper)     |
 | `ccm remove <name> [-f]`                                 | Remove a profile. `-f` skips confirmation                     |
+| `ccm copy-config <source> <target> [--only x] [--dry-run] [-f]` | Copy non-auth config (settings/hooks/skills plugins) |
 | `ccm run <name> -p <prompt>`                             | Run a prompt non-interactively                                |
 
 ## Compliance Notice
@@ -216,6 +218,40 @@ Suppresses auto-opening a browser. Claude prints the auth URL — copy it, open 
 ccm login work --console
 ```
 
+### Copying Config Between Profiles
+
+```bash
+# Preview before applying
+ccm copy-config work personal --dry-run
+
+# Copy with interactive overwrite confirmation
+ccm copy-config work personal
+
+# Force overwrite without prompt
+ccm copy-config work personal --force
+
+# Copy only settings (or only plugins)
+ccm copy-config work personal --only settings
+ccm copy-config work personal --only plugins
+```
+
+`copy-config` is intentionally conservative. It copies only non-auth profile config paths:
+
+- `settings.json`
+- `plugins/`
+
+It does **not** copy runtime/auth state such as `.claude.json`, `sessions/`, `history.jsonl`,
+`projects/`, `session-env/`, `telemetry/`, or top-level profile cache directories.
+
+You can narrow the copy scope with `--only settings` or `--only plugins`. The option is repeatable and also supports comma-separated values (e.g. `--only settings,plugins`).
+
+You can also bootstrap at creation time:
+
+```bash
+# Create profile and seed non-auth config from an existing profile
+ccm create personal --from work
+```
+
 ## How It Works
 
 ### Architecture Overview
@@ -244,10 +280,12 @@ src/
 │   ├── config.ts            # Config file I/O with atomic writes
 │   ├── profiles.ts          # Profile directory management and validation
 │   ├── profile-store.ts     # Reconciled config/filesystem profile view
+│   ├── profile-config-copy.ts # Config copy planner + transactional apply/rollback
 │   ├── claude.ts            # Claude binary discovery, spawning, auth status
 │   ├── compliance.ts        # Centralized compliance notice text and official sources
 │   └── browsers.ts          # Browser wrapper generation and validation
 └── commands/
+    ├── copy-config.ts       # Copy non-auth config between profiles (dry-run + rollback)
     ├── compliance.ts        # Dedicated compliance/TOS command
     ├── create.ts            # Create profile (with rollback on failure)
     ├── list.ts              # List profiles with auth status and drift state

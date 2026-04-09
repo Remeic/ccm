@@ -12,6 +12,10 @@ vi.mock('../../src/lib/profiles.js', () => ({
   createProfileDir: vi.fn(),
   removeProfileDir: vi.fn(),
 }))
+vi.mock('../../src/lib/profile-config-copy.js', () => ({
+  applyProfileConfigCopy: vi.fn(),
+  planProfileConfigCopy: vi.fn(),
+}))
 vi.mock('../../src/lib/browsers.js', () => ({
   ensureBrowserWrapper: vi.fn(),
   removeBrowserWrapper: vi.fn(),
@@ -20,6 +24,7 @@ vi.mock('../../src/lib/browsers.js', () => ({
 import { ensureBrowserWrapper, removeBrowserWrapper } from '../../src/lib/browsers.js'
 import { getCompactComplianceNoticeLines } from '../../src/lib/compliance.js'
 import { addProfile } from '../../src/lib/config.js'
+import { applyProfileConfigCopy, planProfileConfigCopy } from '../../src/lib/profile-config-copy.js'
 import { createProfileDir, removeProfileDir } from '../../src/lib/profiles.js'
 
 const mockAddProfile = vi.mocked(addProfile)
@@ -28,10 +33,19 @@ const mockCreateProfileDir = vi.mocked(createProfileDir)
 const mockRemoveProfileDir = vi.mocked(removeProfileDir)
 const mockEnsureBrowserWrapper = vi.mocked(ensureBrowserWrapper)
 const mockRemoveBrowserWrapper = vi.mocked(removeBrowserWrapper)
+const mockApplyProfileConfigCopy = vi.mocked(applyProfileConfigCopy)
+const mockPlanProfileConfigCopy = vi.mocked(planProfileConfigCopy)
 
 beforeEach(() => {
   vi.resetAllMocks()
   mockGetCompactComplianceNoticeLines.mockReturnValue(['warning line 1', 'warning line 2'])
+  mockPlanProfileConfigCopy.mockReturnValue({
+    sourceName: 'base',
+    targetName: 'work',
+    operations: [],
+    overwriteCount: 0,
+    createCount: 0,
+  })
   vi.spyOn(console, 'log').mockImplementation(() => {})
   vi.spyOn(console, 'error').mockImplementation(() => {})
   vi.spyOn(process, 'exit').mockImplementation(code => {
@@ -53,10 +67,12 @@ describe('command: create', () => {
       const command = program.commands.find(candidate => candidate.name() === 'create')
       const labelOption = command?.options.find(option => option.long === '--label')
       const browserOption = command?.options.find(option => option.long === '--browser')
+      const fromOption = command?.options.find(option => option.long === '--from')
 
       expect(command?.description()).toBe('Create a new profile')
       expect(labelOption?.description).toBe('Profile label')
       expect(browserOption?.description).toBe('Browser for OAuth login')
+      expect(fromOption?.description).toBe('Initialize non-auth config from an existing profile')
     })
 
     test('creates profile directory and adds to config', () => {
@@ -205,6 +221,58 @@ describe('command: create', () => {
       expect(mockEnsureBrowserWrapper).not.toHaveBeenCalled()
       expect(mockAddProfile).toHaveBeenCalledWith(expect.objectContaining({ browser: undefined }))
       expect(log).toHaveBeenCalledWith('  Next: ccm login work')
+    })
+
+    test('copies non-auth config from source profile when --from is provided', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/profiles/work')
+      mockPlanProfileConfigCopy.mockReturnValue({
+        sourceName: 'base',
+        targetName: 'work',
+        operations: [
+          {
+            sourcePath: '/tmp/profiles/base/settings.json',
+            targetPath: '/tmp/profiles/work/settings.json',
+            relativePath: 'settings.json',
+            kind: 'file',
+            overwrite: false,
+          },
+        ],
+        overwriteCount: 0,
+        createCount: 1,
+      })
+
+      const program = createProgram()
+      program.parse(['node', 'ccm', 'create', 'work', '--from', 'base'])
+
+      expect(mockPlanProfileConfigCopy).toHaveBeenCalledWith('base', 'work')
+      expect(mockApplyProfileConfigCopy).toHaveBeenCalledTimes(1)
+      expect(mockAddProfile).toHaveBeenCalledWith(expect.objectContaining({ name: 'work' }))
+    })
+
+    test('does not copy profile config when --from is not provided', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/profiles/work')
+
+      const program = createProgram()
+      program.parse(['node', 'ccm', 'create', 'work'])
+
+      expect(mockPlanProfileConfigCopy).not.toHaveBeenCalled()
+      expect(mockApplyProfileConfigCopy).not.toHaveBeenCalled()
+    })
+
+    test('rolls back profile dir and browser wrapper when --from copy fails', () => {
+      mockCreateProfileDir.mockReturnValue('/tmp/profiles/work')
+      mockEnsureBrowserWrapper.mockReturnValue('/home/.ccm/browsers/work.sh')
+      mockPlanProfileConfigCopy.mockImplementation(() => {
+        throw new Error('source profile missing')
+      })
+
+      const program = createProgram()
+      expect(() =>
+        program.parse(['node', 'ccm', 'create', 'work', '--from', 'base', '--browser', 'firefox']),
+      ).toThrow('exit:1')
+
+      expect(mockRemoveProfileDir).toHaveBeenCalledWith('work')
+      expect(mockRemoveBrowserWrapper).toHaveBeenCalledWith('work')
     })
   })
 })
