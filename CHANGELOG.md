@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.1](https://github.com/Remeic/ccm/compare/ccm-v0.5.0...ccm-v0.5.1) (2026-04-10)
+
+
+### Bug Fixes
+
+* support resume args in ccm use ([6ffe71a](https://github.com/Remeic/ccm/commit/6ffe71a49ea4e8c7d8c50e9b335e92140f6113b6))
+* **use:** forward resume args without separator ([bd1c662](https://github.com/Remeic/ccm/commit/bd1c662e85c106399bb4615cdbb71476e371b188))
+
 ## [0.5.0](https://github.com/Remeic/ccm/compare/ccm-v0.4.0...ccm-v0.5.0) (2026-04-09)
 
 
