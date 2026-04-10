@@ -73,6 +73,17 @@ describe('command: login', () => {
     )
   })
 
+  test('passes through claude close code in --console mode', () => {
+    mockProfileExists.mockReturnValue(true)
+    const fakeChild = new EventEmitter()
+    mockSpawnClaude.mockReturnValue(fakeChild as any)
+
+    const program = createProgram()
+    program.parse(['node', 'ccm', 'login', 'work', '--console'])
+
+    expect(() => fakeChild.emit('close', null)).toThrow('exit:0')
+  })
+
   test('fails if profile does not exist', () => {
     mockProfileExists.mockReturnValue(false)
     const program = createProgram()

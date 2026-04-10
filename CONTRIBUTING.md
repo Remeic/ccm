@@ -5,6 +5,7 @@
 ```sh
 git clone https://github.com/remeic/ccm.git
 cd ccm
+nvm use 24
 bun install
 ```
 
@@ -41,7 +42,7 @@ node dist/index.js remove test-profile -f
 - **Linter/formatter**: [Biome](https://biomejs.dev/) (runs on commit via lint-staged)
 - **Commits**: [Conventional Commits](https://www.conventionalcommits.org/) enforced by commitlint
 - **Tests**: 100% coverage required on branches, functions, lines, statements
-- **Mutation testing**: [Stryker](https://stryker-mutator.io/) validates test effectiveness beyond line coverage
+- **Mutation testing**: [Stryker](https://stryker-mutator.io/) enforces a 100% mutation score
 
 ```sh
 bun run test:mutation  # run mutation tests
