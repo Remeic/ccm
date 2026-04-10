@@ -23,9 +23,9 @@ export default {
     fileName: 'mutation-report/index.html',
   },
   thresholds: {
-    high: 80,
-    low: 60,
-    break: 60,
+    high: 100,
+    low: 100,
+    break: 100,
   },
   concurrency: 2,
   timeoutMS: 10000,
