@@ -184,6 +184,39 @@ describe('profile-store error paths', () => {
     )
   })
 
+  test('rethrows finalization errors for orphaned profiles without config recovery', () => {
+    mockGetProfile.mockReturnValue(undefined)
+    mockProfileExists.mockReturnValue(true)
+    mockStageProfileDirRemoval.mockReturnValue('/profiles/.orphan.staged')
+    mockFinalizeStagedProfileDirRemoval.mockImplementation(() => {
+      throw new Error('finalize fail')
+    })
+
+    expect(() => removeStoredProfile('orphan', '/cfg.json', '/profiles', '/browsers')).toThrowError(
+      new Error('finalize fail'),
+    )
+    expect(mockAddProfile).not.toHaveBeenCalled()
+  })
+
+  test('rolls back wrapper-only staging when config removal fails for config-only profile', () => {
+    mockGetProfile.mockReturnValue({ name: 'work', createdAt: '2026-01-01' })
+    mockProfileExists.mockReturnValue(false)
+    mockStageBrowserWrapperRemoval.mockReturnValue('/browsers/work.sh.staged')
+    mockRemoveProfile.mockImplementation(() => {
+      throw new Error('config fail')
+    })
+
+    expect(() => removeStoredProfile('work', '/cfg.json', '/profiles', '/browsers')).toThrowError(
+      new Error('config fail'),
+    )
+    expect(mockRestoreStagedProfileDir).not.toHaveBeenCalled()
+    expect(mockRestoreStagedBrowserWrapper).toHaveBeenCalledWith(
+      '/browsers/work.sh.staged',
+      'work',
+      '/browsers',
+    )
+  })
+
   test('lists stored profiles using reconciled config and filesystem names', () => {
     mockLoadConfig.mockReturnValue({
       profiles: {
