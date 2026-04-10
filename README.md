@@ -136,7 +136,7 @@ $ ccm use work
 | `ccm create <name> [-l label] [-b browser] [--from p]`   | Create a profile. `--from` seeds non-auth config              |
 | `ccm compliance` / `ccm tos`                             | Show the compliance notice, disclaimer, and official sources  |
 | `ccm list`                                               | List all profiles with auth status, including drifted entries |
-| `ccm use <name> [-- args]`                               | Launch Claude Code. Args after `--` are passed to Claude      |
+| `ccm use <name> [args...]`                               | Launch Claude Code. Extra args are passed to Claude            |
 | `ccm login <name> [--console] [-b browser] [--url-only]` | Authenticate a profile                                        |
 | `ccm status [name]`                                      | Show auth status and storage state for one or all profiles    |
 | `ccm rename <old-name> <new-name>`                       | Rename a profile (config, directory, and browser wrapper)     |
@@ -163,10 +163,13 @@ The notice is intentionally conservative:
 
 ## Passing Flags and Environment Variables
 
-Everything after `--` in `ccm use` is forwarded to `claude`. Env vars from your shell are inherited.
+Extra args in `ccm use` are forwarded to `claude` (with or without the `--` separator). Env vars from your shell are inherited.
 
 ```bash
 # Pass flags
+ccm use work --resume e56f8bd7-a2bb-4c0e-9aa0-3eb7f717bf6a
+
+# Pass flags (explicit separator)
 ccm use work -- --dangerously-skip-permissions
 
 # Env vars + flags
