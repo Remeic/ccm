@@ -42,7 +42,7 @@
     "prepare": "husky"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "dependencies": {
     "commander": "^13.1.0",

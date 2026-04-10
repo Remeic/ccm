@@ -18,7 +18,7 @@
 [![npm version](https://img.shields.io/npm/v/%40remeic%2Fccm.svg)](https://www.npmjs.com/package/@remeic/ccm)
 [![Homebrew tap](https://img.shields.io/badge/Homebrew-tap-FBB040?logo=homebrew&logoColor=white)](https://github.com/Remeic/homebrew-tap)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D24-brightgreen)](https://nodejs.org)
 [![codecov](https://codecov.io/github/Remeic/ccm/graph/badge.svg?token=E16LCLDHYV)](https://codecov.io/github/Remeic/ccm)
 [![Mutation testing badge](https://img.shields.io/endpoint?style=flat&url=https%3A%2F%2Fbadge-api.stryker-mutator.io%2Fgithub.com%2FRemeic%2Fccm%2Fmain)](https://dashboard.stryker-mutator.io/reports/github.com/Remeic/ccm/main)
 
@@ -86,7 +86,7 @@ Claude Code stores authentication in a single config directory. If you use multi
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org) >= 18
+- [Node.js](https://nodejs.org) >= 24
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed and available on your `PATH`
 
 ## Install
@@ -136,7 +136,7 @@ $ ccm use work
 | `ccm create <name> [-l label] [-b browser] [--from p]`   | Create a profile. `--from` seeds non-auth config              |
 | `ccm compliance` / `ccm tos`                             | Show the compliance notice, disclaimer, and official sources  |
 | `ccm list`                                               | List all profiles with auth status, including drifted entries |
-| `ccm use <name> [-- args]`                               | Launch Claude Code. Args after `--` are passed to Claude      |
+| `ccm use <name> [args...]`                               | Launch Claude Code. Extra args are passed to Claude            |
 | `ccm login <name> [--console] [-b browser] [--url-only]` | Authenticate a profile                                        |
 | `ccm status [name]`                                      | Show auth status and storage state for one or all profiles    |
 | `ccm rename <old-name> <new-name>`                       | Rename a profile (config, directory, and browser wrapper)     |
@@ -163,10 +163,13 @@ The notice is intentionally conservative:
 
 ## Passing Flags and Environment Variables
 
-Everything after `--` in `ccm use` is forwarded to `claude`. Env vars from your shell are inherited.
+Extra args in `ccm use` are forwarded to `claude` (with or without the `--` separator). Env vars from your shell are inherited.
 
 ```bash
 # Pass flags
+ccm use work --resume e56f8bd7-a2bb-4c0e-9aa0-3eb7f717bf6a
+
+# Pass flags (explicit separator)
 ccm use work -- --dangerously-skip-permissions
 
 # Env vars + flags

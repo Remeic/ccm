@@ -44,6 +44,28 @@ describe('command: use', () => {
     expect(mockSpawnClaude).toHaveBeenCalledWith('/tmp/profiles/work', [])
   })
 
+  test('forwards Claude flags without requiring -- separator', () => {
+    mockProfileExists.mockReturnValue(true)
+    const fakeChild = new EventEmitter()
+    mockSpawnClaude.mockReturnValue(fakeChild as any)
+
+    const program = createProgram()
+    program.parse(['node', 'ccm', 'use', 'work', '--resume', 'session-123'])
+
+    expect(mockSpawnClaude).toHaveBeenCalledWith('/tmp/profiles/work', ['--resume', 'session-123'])
+  })
+
+  test('forwards Claude flags when using -- separator', () => {
+    mockProfileExists.mockReturnValue(true)
+    const fakeChild = new EventEmitter()
+    mockSpawnClaude.mockReturnValue(fakeChild as any)
+
+    const program = createProgram()
+    program.parse(['node', 'ccm', 'use', 'work', '--', '--resume', 'session-123'])
+
+    expect(mockSpawnClaude).toHaveBeenCalledWith('/tmp/profiles/work', ['--resume', 'session-123'])
+  })
+
   test('fails if profile does not exist', () => {
     mockProfileExists.mockReturnValue(false)
     const program = createProgram()
