@@ -9,6 +9,7 @@ export default {
     'src/commands/copy-config.ts',
     'src/commands/compliance.ts',
     'src/commands/create.ts',
+    'src/commands/skills.ts',
     'src/lib/browsers.ts',
     'src/lib/claude.ts',
     'src/lib/compliance.ts',
