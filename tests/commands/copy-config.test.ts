@@ -114,10 +114,14 @@ describe('command: copy-config', () => {
     const program = createProgram()
     await program.parseAsync(['node', 'ccm', 'copy-config', 'source', 'target'])
 
-    expect(log).toHaveBeenCalledWith('! 1 existing path(s) in "target" will be overwritten.')
+    expect(log).toHaveBeenCalledWith(
+      expect.stringContaining('1 existing path(s) in "target" will be overwritten.'),
+    )
     expect(question).toHaveBeenCalledWith('Continue? (y/N) ', expect.any(Function))
     expect(log).toHaveBeenCalledWith(
-      '\x1b[32m✓\x1b[0m Copied 1 item(s) from "source" to "target" (0 created, 1 overwritten)',
+      expect.stringContaining(
+        'Copied 1 item(s) from "source" to "target" (0 created, 1 overwritten)',
+      ),
     )
     expect(mockApplyProfileConfigCopy).toHaveBeenCalledTimes(1)
   })
@@ -247,7 +251,7 @@ describe('command: copy-config', () => {
     await expect(
       program.parseAsync(['node', 'ccm', 'copy-config', 'source', 'target']),
     ).rejects.toThrow('exit:1')
-    expect(errLog).toHaveBeenCalledWith('\x1b[31m✗\x1b[0m boom')
+    expect(errLog).toHaveBeenCalledWith(expect.stringContaining('boom'))
   })
 
   test('prints error and exits on non-Error throw', async () => {
@@ -260,6 +264,6 @@ describe('command: copy-config', () => {
     await expect(
       program.parseAsync(['node', 'ccm', 'copy-config', 'source', 'target']),
     ).rejects.toThrow('exit:1')
-    expect(errLog).toHaveBeenCalledWith('\x1b[31m✗\x1b[0m string boom')
+    expect(errLog).toHaveBeenCalledWith(expect.stringContaining('string boom'))
   })
 })

@@ -1,3 +1,5 @@
+import { warnLine } from './ui.js'
+
 export type ComplianceSource = {
   label: string
   url: string
@@ -40,7 +42,7 @@ function buildRuleLines(): string[] {
 /** Formats a short warning that can be embedded in interactive command output. */
 export function getCompactComplianceNoticeLines(): string[] {
   return [
-    '\x1b[33m!\x1b[0m Compliance notice',
+    warnLine('Compliance notice'),
     '  ccm isolates profiles but does not expand Anthropic usage rights.',
     '  Use each Claude account with one person and one active terminal session.',
     '  Do not share credentials or API keys across users or parallel operators.',

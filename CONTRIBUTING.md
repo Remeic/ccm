@@ -16,7 +16,9 @@ The codebase separates pure logic from CLI wiring:
 - `src/lib/` — core modules (config I/O, profile management, Claude interaction). No CLI framework dependencies.
 - `src/commands/` — thin Commander.js command registrations that call into `lib/`.
 
-This makes the core logic independently testable without mocking the CLI framework.
+This makes the core logic independently testable without mocking the CLI framework. For the design
+rationale (state reconciliation, the transactional stage/rollback protocol, and why error handling
+lives in `runAction` rather than `index.ts`), see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Development
 

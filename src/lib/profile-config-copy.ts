@@ -1,6 +1,7 @@
 import { cpSync, existsSync, mkdirSync, renameSync, rmSync, statSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { PROFILES_DIR } from './constants.js'
+import { formatError } from './errors.js'
 import { getProfileDir, profileExists, validateProfileName } from './profiles.js'
 
 const SUPPORTED_CONFIG_PATHS = ['settings.json', 'plugins'] as const
@@ -219,8 +220,4 @@ function getStagedPath(path: string): string {
   }
 
   throw new Error(`Could not allocate a temporary path for "${base}"`)
-}
-
-function formatError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
 }

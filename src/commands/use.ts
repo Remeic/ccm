@@ -1,6 +1,7 @@
 import type { Command } from 'commander'
 import { spawnClaude } from '../lib/claude.js'
 import { getProfileDir, profileExists } from '../lib/profiles.js'
+import { runAction } from '../lib/run-action.js'
 
 /** Registers the CLI workflow for launching Claude Code with a profile. */
 export function registerUse(program: Command): void {
@@ -9,8 +10,8 @@ export function registerUse(program: Command): void {
     .description('Launch Claude Code with a profile')
     .allowUnknownOption()
     .helpOption(false)
-    .action((name: string, args: string[]) => {
-      try {
+    .action(
+      runAction((name: string, args: string[]) => {
         if (!profileExists(name)) {
           throw new Error(`Profile "${name}" does not exist. Create it first: ccm create ${name}`)
         }
@@ -18,9 +19,6 @@ export function registerUse(program: Command): void {
         const dir = getProfileDir(name)
         const child = spawnClaude(dir, args)
         child.on('close', code => process.exit(code ?? 0))
-      } catch (e) {
-        console.error(`\x1b[31m✗\x1b[0m ${e instanceof Error ? e.message : String(e)}`)
-        process.exit(1)
-      }
-    })
+      }),
+    )
 }

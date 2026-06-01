@@ -1,54 +1,69 @@
 import type { Command } from 'commander'
 import { getAuthStatus } from '../lib/claude.js'
 import { getStoredProfile, listStoredProfiles } from '../lib/profile-store.js'
+import { NO_ACCOUNT_PLACEHOLDER, toProfileView } from '../lib/profile-view.js'
+import { runAction } from '../lib/run-action.js'
+import { statusDot } from '../lib/ui.js'
 
 /** Registers the CLI workflow for inspecting profile auth status. */
 export function registerStatus(program: Command): void {
   program
     .command('status [name]')
     .description('Show auth status for a profile (or all profiles)')
-    .action(async (name?: string) => {
-      try {
+    .option('--json', 'Output machine-readable JSON')
+    .action(
+      runAction(async (name: string | undefined, opts: { json?: boolean }) => {
         if (name) {
           const profile = getStoredProfile(name)
           if (!profile) {
             throw new Error(`Profile "${name}" does not exist`)
           }
           const status = profile.hasDirectory ? await getAuthStatus(profile.dir) : undefined
-          console.log(`Profile: ${name}`)
-          console.log(`State: ${profile.state}`)
-          console.log(`Logged in: ${status?.loggedIn ?? 'unknown'}`)
-          console.log(`Auth method: ${status?.authMethod ?? 'unavailable'}`)
-          if (profile.meta?.createdAt) console.log(`Created: ${profile.meta.createdAt}`)
-          if (!profile.hasDirectory) console.log('Directory: missing')
+          const view = toProfileView(profile, status)
+
+          if (opts.json) {
+            console.log(JSON.stringify(view, null, 2))
+            return
+          }
+
+          console.log(`Profile: ${view.name}`)
+          console.log(`State: ${view.state}`)
+          console.log(`Logged in: ${view.loggedIn ?? 'unknown'}`)
+          console.log(`Auth method: ${view.authMethod}`)
+          if (view.createdAt) console.log(`Created: ${view.createdAt}`)
+          if (!view.hasDirectory) console.log('Directory: missing')
           if (status?.email) console.log(`Email: ${status.email}`)
           if (status?.orgName) console.log(`Org: ${status.orgName}`)
           if (status?.subscriptionType) console.log(`Subscription: ${status.subscriptionType}`)
-        } else {
-          const profiles = listStoredProfiles()
-          if (profiles.length === 0) {
-            console.log('No profiles.')
-            return
-          }
-          const statuses = await Promise.all(
-            profiles.map(async profile => ({
-              profile,
-              status: profile.hasDirectory ? await getAuthStatus(profile.dir) : undefined,
-            })),
-          )
-          for (const { profile, status } of statuses) {
-            const icon = status?.loggedIn === true ? '\x1b[32m●\x1b[0m' : '\x1b[31m●\x1b[0m'
-            const account = status?.email ?? status?.apiKeySource ?? '—'
-            const authMethod = status?.authMethod ?? 'unavailable'
-            const stateSuffix = profile.state === 'ready' ? '' : ` [${profile.state}]`
-            console.log(
-              `${icon} ${profile.name.padEnd(20)} ${authMethod.padEnd(15)} ${account}${stateSuffix}`,
-            )
-          }
+          return
         }
-      } catch (e) {
-        console.error(`\x1b[31m✗\x1b[0m ${e instanceof Error ? e.message : String(e)}`)
-        process.exit(1)
-      }
-    })
+
+        const profiles = listStoredProfiles()
+        const views = await Promise.all(
+          profiles.map(async profile => {
+            const status = profile.hasDirectory ? await getAuthStatus(profile.dir) : undefined
+            return toProfileView(profile, status)
+          }),
+        )
+
+        if (opts.json) {
+          console.log(JSON.stringify(views, null, 2))
+          return
+        }
+
+        if (views.length === 0) {
+          console.log('No profiles.')
+          return
+        }
+
+        for (const view of views) {
+          const icon = statusDot(view.loggedIn === true)
+          const account = view.account ?? NO_ACCOUNT_PLACEHOLDER
+          const stateSuffix = view.state === 'ready' ? '' : ` [${view.state}]`
+          console.log(
+            `${icon} ${view.name.padEnd(20)} ${view.authMethod.padEnd(15)} ${account}${stateSuffix}`,
+          )
+        }
+      }),
+    )
 }
