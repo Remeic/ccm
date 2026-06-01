@@ -143,6 +143,7 @@ $ ccm use work
 | `ccm remove <name> [-f]`                                 | Remove a profile. `-f` skips confirmation                     |
 | `ccm copy-config <source> <target> [--only x] [--dry-run] [-f]` | Copy non-auth config (settings/hooks/skills plugins) |
 | `ccm run <name> -p <prompt>`                             | Run a prompt non-interactively                                |
+| `ccm skills <add\|list\|remove\|update> <name> [repos...]` | Manage skills scoped to a profile (wraps `npx skills`)       |
 
 ## Compliance Notice
 
@@ -220,6 +221,28 @@ Suppresses auto-opening a browser. Claude prints the auth URL — copy it, open 
 ```bash
 ccm login work --console
 ```
+
+### Managing Skills per Profile
+
+`npx skills add <owner/repo>` installs into the global Claude Code dir (`~/.claude/skills`).
+`ccm skills` runs the same `skills` tool but points `CLAUDE_CONFIG_DIR` at the profile, so
+skills land in `<profile>/skills/` — isolated per profile, visible to every session of that
+profile (the per-profile equivalent of `npx skills add -g`).
+
+```bash
+# Install skills from GitHub into a profile
+ccm skills add work owner/repo
+
+# Multiple repos + passthrough flags (forwarded to npx skills)
+ccm skills add work a/b c/d --copy
+
+# List / update / remove
+ccm skills list work
+ccm skills update work
+ccm skills remove work my-skill
+```
+
+Requires network/npx cache (uses `npx -y skills`).
 
 ### Copying Config Between Profiles
 
