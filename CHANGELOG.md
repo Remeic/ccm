@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/Remeic/ccm/compare/ccm-v0.5.1...ccm-v0.6.0) (2026-06-01)
+
+
+### Features
+
+* **skills:** add `ccm skills` to manage skills per profile ([#49](https://github.com/Remeic/ccm/issues/49)) ([c570997](https://github.com/Remeic/ccm/commit/c570997d3f0d4349850c642085a1879a6c445e25))
+
 ## [0.5.1](https://github.com/Remeic/ccm/compare/ccm-v0.5.0...ccm-v0.5.1) (2026-04-10)
 
 
