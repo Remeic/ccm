@@ -57,6 +57,8 @@ Manage separate Claude Code profiles for personal, work, and client accounts wit
 - [Quick Start](#quick-start)
 - [Commands](#commands)
 - [Compliance Notice](#compliance-notice)
+- [Scripting (JSON Output)](#scripting-json-output)
+- [Shell Completion](#shell-completion)
 - [Passing Flags and Environment Variables](#passing-flags-and-environment-variables)
 - [Multi-Account Login](#multi-account-login)
   - [Different Browser per Profile](#different-browser-per-profile)
@@ -135,15 +137,16 @@ $ ccm use work
 | -------------------------------------------------------- | ------------------------------------------------------------- |
 | `ccm create <name> [-l label] [-b browser] [--from p]`   | Create a profile. `--from` seeds non-auth config              |
 | `ccm compliance` / `ccm tos`                             | Show the compliance notice, disclaimer, and official sources  |
-| `ccm list`                                               | List all profiles with auth status, including drifted entries |
+| `ccm list [--json]`                                      | List all profiles with auth status, including drifted entries. `--json` for scripts |
 | `ccm use <name> [args...]`                               | Launch Claude Code. Extra args are passed to Claude            |
 | `ccm login <name> [--console] [-b browser] [--url-only]` | Authenticate a profile                                        |
-| `ccm status [name]`                                      | Show auth status and storage state for one or all profiles    |
+| `ccm status [name] [--json]`                             | Show auth status and storage state for one or all profiles. `--json` for scripts |
 | `ccm rename <old-name> <new-name>`                       | Rename a profile (config, directory, and browser wrapper)     |
 | `ccm remove <name> [-f]`                                 | Remove a profile. `-f` skips confirmation                     |
 | `ccm copy-config <source> <target> [--only x] [--dry-run] [-f]` | Copy non-auth config (settings/hooks/skills plugins) |
 | `ccm run <name> -p <prompt>`                             | Run a prompt non-interactively                                |
 | `ccm skills <add\|list\|remove\|update> <name> [repos...]` | Manage skills scoped to a profile (wraps `npx skills`)       |
+| `ccm completion <bash\|zsh\|fish>`                       | Print a shell completion script                               |
 
 ## Compliance Notice
 
@@ -161,6 +164,39 @@ The notice is intentionally conservative:
 - Shared credentials, shared operators, and parallel use of the same account are out of scope.
 - If a team needs parallel access, they should use separate seats/accounts or API-key-based access under applicable Anthropic commercial terms.
 - The notice is compliance guidance, not legal advice. Users remain responsible for reviewing Anthropic terms for their exact workflow.
+
+## Scripting (JSON Output)
+
+`ccm list` and `ccm status` accept `--json` for machine-readable output you can pipe into `jq` or
+other tooling. Color is automatically disabled when output is not a TTY (or when `NO_COLOR` is set),
+so human-facing commands stay clean in pipes and logs.
+
+```bash
+# All profiles as JSON
+ccm list --json | jq '.[] | select(.loggedIn) | .name'
+
+# A single profile
+ccm status work --json | jq '.account'
+```
+
+Each entry: `{ name, state, authMethod, account, loggedIn, createdAt, hasConfig, hasDirectory }`.
+Unknown values are `null` (never the `—` placeholder used in the human table).
+
+## Shell Completion
+
+`ccm completion <shell>` prints a completion script. The command list is derived from the live
+command registry, so it never drifts as commands are added.
+
+```bash
+# zsh
+ccm completion zsh > "${fpath[1]}/_ccm"
+
+# bash
+ccm completion bash >> ~/.bashrc
+
+# fish
+ccm completion fish > ~/.config/fish/completions/ccm.fish
+```
 
 ## Passing Flags and Environment Variables
 
@@ -307,10 +343,16 @@ src/
 │   ├── profiles.ts          # Profile directory management and validation
 │   ├── profile-store.ts     # Reconciled config/filesystem profile view
 │   ├── profile-config-copy.ts # Config copy planner + transactional apply/rollback
+│   ├── profile-view.ts      # Serializable projection shared by list/status (incl. --json)
 │   ├── claude.ts            # Claude binary discovery, spawning, auth status
 │   ├── compliance.ts        # Centralized compliance notice text and official sources
+│   ├── completion.ts        # Shell completion script generation (bash/zsh/fish)
+│   ├── errors.ts            # Shared error-message formatting
+│   ├── run-action.ts        # Wraps command actions with uniform error handling
+│   ├── ui.ts                # Terminal output helpers (NO_COLOR/TTY-aware)
 │   └── browsers.ts          # Browser wrapper generation and validation
 └── commands/
+    ├── completion.ts        # Emit a shell completion script
     ├── copy-config.ts       # Copy non-auth config between profiles (dry-run + rollback)
     ├── compliance.ts        # Dedicated compliance/TOS command
     ├── create.ts            # Create profile (with rollback on failure)
@@ -322,6 +364,9 @@ src/
     ├── remove.ts            # Remove profile with staged rollback
     └── run.ts               # Run prompt with specific profile
 ```
+
+For the design rationale behind the reconciled profile store and the transactional
+staging/rollback used by remove, rename, and copy-config, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
 ### Profile Isolation
 
