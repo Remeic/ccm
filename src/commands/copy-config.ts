@@ -7,6 +7,8 @@ import {
   type ProfileConfigCopySelector,
   planProfileConfigCopy,
 } from '../lib/profile-config-copy.js'
+import { runAction } from '../lib/run-action.js'
+import { printSuccess, warnLine } from '../lib/ui.js'
 
 function confirm(question: string): Promise<boolean> {
   const rl = createInterface({ input: process.stdin, output: process.stdout })
@@ -56,12 +58,12 @@ export function registerCopyConfig(program: Command): void {
     .option('--dry-run', 'Preview what would be copied without writing files')
     .option('-f, --force', 'Skip overwrite confirmation and apply immediately')
     .action(
-      async (
-        source: string,
-        target: string,
-        opts: { dryRun?: boolean; force?: boolean; only?: string[] },
-      ) => {
-        try {
+      runAction(
+        async (
+          source: string,
+          target: string,
+          opts: { dryRun?: boolean; force?: boolean; only?: string[] },
+        ) => {
           const plan = planProfileConfigCopy(
             source,
             target,
@@ -79,7 +81,9 @@ export function registerCopyConfig(program: Command): void {
 
           if (plan.overwriteCount > 0) {
             console.log(
-              `! ${plan.overwriteCount} existing path(s) in "${target}" will be overwritten.`,
+              warnLine(
+                `${plan.overwriteCount} existing path(s) in "${target}" will be overwritten.`,
+              ),
             )
             if (!opts.force) {
               const ok = await confirm('Continue? (y/N) ')
@@ -91,13 +95,10 @@ export function registerCopyConfig(program: Command): void {
           }
 
           const result = applyProfileConfigCopy(plan)
-          console.log(
-            `\x1b[32m✓\x1b[0m Copied ${result.copiedCount} item(s) from "${source}" to "${target}" (${result.createdCount} created, ${result.overwrittenCount} overwritten)`,
+          printSuccess(
+            `Copied ${result.copiedCount} item(s) from "${source}" to "${target}" (${result.createdCount} created, ${result.overwrittenCount} overwritten)`,
           )
-        } catch (e) {
-          console.error(`\x1b[31m✗\x1b[0m ${e instanceof Error ? e.message : String(e)}`)
-          process.exit(1)
-        }
-      },
+        },
+      ),
     )
 }

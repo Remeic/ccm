@@ -5,6 +5,7 @@ import {
   getCompactComplianceNoticeLines,
   getFullComplianceNoticeLines,
 } from '../../src/lib/compliance.js'
+import { warnLine } from '../../src/lib/ui.js'
 
 describe('compliance notices', () => {
   test('exports the official sources used by the notice', () => {
@@ -33,7 +34,7 @@ describe('compliance notices', () => {
 
   test('formats the compact notice for interactive commands', () => {
     expect(getCompactComplianceNoticeLines()).toEqual([
-      '\x1b[33m!\x1b[0m Compliance notice',
+      warnLine('Compliance notice'),
       '  ccm isolates profiles but does not expand Anthropic usage rights.',
       '  Use each Claude account with one person and one active terminal session.',
       '  Do not share credentials or API keys across users or parallel operators.',

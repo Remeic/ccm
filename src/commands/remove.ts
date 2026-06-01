@@ -1,6 +1,8 @@
 import { createInterface } from 'node:readline'
 import type { Command } from 'commander'
 import { getStoredProfile, removeStoredProfile } from '../lib/profile-store.js'
+import { runAction } from '../lib/run-action.js'
+import { printSuccess } from '../lib/ui.js'
 
 function confirm(question: string): Promise<boolean> {
   const rl = createInterface({ input: process.stdin, output: process.stdout })
@@ -18,8 +20,8 @@ export function registerRemove(program: Command): void {
     .command('remove <name>')
     .description('Remove a profile')
     .option('-f, --force', 'Skip confirmation')
-    .action(async (name: string, opts: { force?: boolean }) => {
-      try {
+    .action(
+      runAction(async (name: string, opts: { force?: boolean }) => {
         const profile = getStoredProfile(name)
         if (!profile) {
           throw new Error(`Profile "${name}" does not exist`)
@@ -35,10 +37,7 @@ export function registerRemove(program: Command): void {
 
         removeStoredProfile(name)
         const stateSuffix = profile.state === 'ready' ? '' : ` (${profile.state})`
-        console.log(`\x1b[32m✓\x1b[0m Profile "${name}" removed${stateSuffix}`)
-      } catch (e) {
-        console.error(`\x1b[31m✗\x1b[0m ${e instanceof Error ? e.message : String(e)}`)
-        process.exit(1)
-      }
-    })
+        printSuccess(`Profile "${name}" removed${stateSuffix}`)
+      }),
+    )
 }

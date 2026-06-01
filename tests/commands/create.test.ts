@@ -106,7 +106,7 @@ describe('command: create', () => {
       const program = createProgram()
       program.parse(['node', 'ccm', 'create', 'test'])
 
-      expect(log).toHaveBeenCalledWith('\x1b[32m✓\x1b[0m Profile "test" created')
+      expect(log).toHaveBeenCalledWith(expect.stringContaining('Profile "test" created'))
     })
 
     test('prints compact compliance notice after success', () => {

@@ -9,6 +9,7 @@ import {
 } from './browsers.js'
 import { addProfile, getProfile, loadConfig, removeProfile, renameProfile } from './config.js'
 import { BROWSERS_DIR, CONFIG_FILE, PROFILES_DIR } from './constants.js'
+import { formatError } from './errors.js'
 import {
   finalizeStagedProfileDirRemoval,
   getProfileDir,
@@ -286,8 +287,4 @@ function restoreConfigEntry(meta: ProfileMeta, configFile: string): void {
     return
   }
   addProfile(meta, configFile)
-}
-
-function formatError(error: unknown): string {
-  return error instanceof Error ? error.message : String(error)
 }
