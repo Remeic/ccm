@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/Remeic/ccm/compare/ccm-v0.6.0...ccm-v0.7.0) (2026-06-01)
+
+
+### Features
+
+* **cli:** scriptable output, shell completion, and CLI refactor ([#52](https://github.com/Remeic/ccm/issues/52)) ([c84be86](https://github.com/Remeic/ccm/commit/c84be862931e28211ed1c8a43c0ff0edecb68241))
+
 ## [0.6.0](https://github.com/Remeic/ccm/compare/ccm-v0.5.1...ccm-v0.6.0) (2026-06-01)
 
 
