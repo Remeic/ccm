@@ -1,6 +1,7 @@
 declare const __PKG_VERSION__: string
 
 import { Command } from 'commander'
+import { registerCompletion } from './commands/completion.js'
 import { registerCompliance } from './commands/compliance.js'
 import { registerCopyConfig } from './commands/copy-config.js'
 import { registerCreate } from './commands/create.js'
@@ -29,5 +30,6 @@ registerStatus(program)
 registerUse(program)
 registerRun(program)
 registerSkills(program)
+registerCompletion(program)
 
 program.parse()

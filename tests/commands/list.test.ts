@@ -18,6 +18,10 @@ const mockListStoredProfiles = vi.mocked(listStoredProfiles)
 beforeEach(() => {
   vi.clearAllMocks()
   vi.spyOn(console, 'log').mockImplementation(() => {})
+  vi.spyOn(console, 'error').mockImplementation(() => {})
+  vi.spyOn(process, 'exit').mockImplementation(code => {
+    throw new Error(`exit:${code}`)
+  })
 })
 
 function createProgram() {
@@ -28,6 +32,16 @@ function createProgram() {
 }
 
 describe('command: list', () => {
+  test('registers description and --json option text', () => {
+    const program = createProgram()
+    const list = program.commands.find(command => command.name() === 'list')
+    expect(list?.description()).toBe(
+      'List all profiles, including drifted config/filesystem entries',
+    )
+    const jsonOption = list?.options.find(option => option.long === '--json')
+    expect(jsonOption?.description).toBe('Output machine-readable JSON')
+  })
+
   test('prints empty message when no profiles exist', async () => {
     mockListStoredProfiles.mockReturnValue([])
     const log = vi.spyOn(console, 'log')
@@ -70,28 +84,37 @@ describe('command: list', () => {
     expect(mockGetAuthStatus).toHaveBeenCalledTimes(2)
   })
 
-  test('displays header row with column names', async () => {
+  test('displays header, separator, and an exactly formatted data row', async () => {
     mockListStoredProfiles.mockReturnValue([
       {
-        name: 'x',
-        dir: '/tmp/profiles/x',
+        name: 'work',
+        dir: '/tmp/profiles/work',
         state: 'ready',
         hasConfig: true,
         hasDirectory: true,
-        meta: { name: 'x', createdAt: '2026-01-01' },
+        meta: { name: 'work', createdAt: '2026-01-15T00:00:00.000Z' },
       },
     ])
-    mockGetAuthStatus.mockResolvedValue({ loggedIn: true, authMethod: 'api_key' })
+    mockGetAuthStatus.mockResolvedValue({
+      loggedIn: true,
+      authMethod: 'claude.ai',
+      email: 'u@t.com',
+    })
     const log = vi.spyOn(console, 'log')
     const program = createProgram()
     await program.parseAsync(['node', 'ccm', 'list'])
 
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('NAME'))
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('STATE'))
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('AUTH'))
+    // Exact column layout pins padding widths, separator width, and the createdAt slice.
+    expect(log).toHaveBeenCalledWith(
+      'NAME                STATE         AUTH           ACCOUNT                            CREATED',
+    )
+    expect(log).toHaveBeenCalledWith('─'.repeat(91))
+    expect(log).toHaveBeenCalledWith(
+      'work                ready         claude.ai      u@t.com                            2026-01-15',
+    )
   })
 
-  test('shows orphaned profile rows when metadata is missing', async () => {
+  test('shows orphaned profile rows with dash placeholders for account and created', async () => {
     mockListStoredProfiles.mockReturnValue([
       {
         name: 'x',
@@ -106,8 +129,10 @@ describe('command: list', () => {
     const program = createProgram()
     await program.parseAsync(['node', 'ccm', 'list'])
 
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('orphaned'))
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('—'))
+    // Both the account and the created columns fall back to the em-dash placeholder.
+    expect(log).toHaveBeenCalledWith(
+      'x                   orphaned      none           —                                  —',
+    )
   })
 
   test('shows dash when no email or apiKeySource', async () => {
@@ -145,7 +170,66 @@ describe('command: list', () => {
     await program.parseAsync(['node', 'ccm', 'list'])
 
     expect(mockGetAuthStatus).not.toHaveBeenCalled()
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('unavailable'))
-    expect(log).toHaveBeenCalledWith(expect.stringContaining('config-only'))
+    expect(log).toHaveBeenCalledWith(
+      'stale               config-only   unavailable    —                                  2026-01-01',
+    )
+  })
+
+  test('--json prints a parseable array of profile views', async () => {
+    mockListStoredProfiles.mockReturnValue([
+      {
+        name: 'work',
+        dir: '/tmp/profiles/work',
+        state: 'ready',
+        hasConfig: true,
+        hasDirectory: true,
+        meta: { name: 'work', createdAt: '2026-01-15T00:00:00.000Z' },
+      },
+    ])
+    mockGetAuthStatus.mockResolvedValue({
+      loggedIn: true,
+      authMethod: 'claude.ai',
+      email: 'u@t.com',
+    })
+    const log = vi.spyOn(console, 'log')
+    const program = createProgram()
+    await program.parseAsync(['node', 'ccm', 'list', '--json'])
+
+    const payload = JSON.parse(log.mock.calls.at(-1)?.[0] as string)
+    expect(payload).toEqual([
+      {
+        name: 'work',
+        state: 'ready',
+        authMethod: 'claude.ai',
+        account: 'u@t.com',
+        loggedIn: true,
+        createdAt: '2026-01-15T00:00:00.000Z',
+        hasConfig: true,
+        hasDirectory: true,
+      },
+    ])
+    // Human table header must not be printed in JSON mode.
+    expect(log).not.toHaveBeenCalledWith(expect.stringContaining('NAME'))
+  })
+
+  test('--json emits an empty array when no profiles exist', async () => {
+    mockListStoredProfiles.mockReturnValue([])
+    const log = vi.spyOn(console, 'log')
+    const program = createProgram()
+    await program.parseAsync(['node', 'ccm', 'list', '--json'])
+
+    expect(JSON.parse(log.mock.calls.at(-1)?.[0] as string)).toEqual([])
+    expect(log).not.toHaveBeenCalledWith(expect.stringContaining('No profiles'))
+  })
+
+  test('prints error and exits when listing fails', async () => {
+    mockListStoredProfiles.mockImplementation(() => {
+      throw new Error('store unreadable')
+    })
+    const errLog = vi.spyOn(console, 'error')
+    const program = createProgram()
+
+    await expect(program.parseAsync(['node', 'ccm', 'list'])).rejects.toThrow('exit:1')
+    expect(errLog).toHaveBeenCalledWith(expect.stringContaining('store unreadable'))
   })
 })
